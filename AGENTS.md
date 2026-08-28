@@ -44,7 +44,12 @@
 | font-weight | `light normal medium semibold bold` |
 | leading / tracking | `tight snug normal relaxed` / `tight normal wide` |
 | 레이아웃 | flex/grid/position/z/overflow 전반, `grid-cols-{1..6,12}`, `col-span-{1..4,full}` |
-| 크기 (w/h/min-w/min-h/size) | 숫자 스케일 `4 5 6 8 10 11 12 16 20 24 32 48 64` + `full/auto/fit/screen` + 분수 `w-{1/2,1/3,2/3,1/4,3/4}` |
+| `w` | 숫자 `4 5 6 8 10 11 12 16 20 24 32 48 64` + `full auto fit screen` + 분수 `w-{1/2,1/3,2/3,1/4,3/4}` |
+| `h` | 숫자 `4 5 6 8 10 11 12 16 20 24 32 48 64` + `full auto fit screen` (분수 없음) |
+| `min-w` | 숫자 `4 5 6 8 10 11 12 16 20 24 32 48 64` + `0 full` **만** (`auto`/`fit`/`screen` 없음) |
+| `min-h` | 숫자 `4 5 6 8 10 11 12 16 20 24 32 48 64` + `0 full screen` **만** (`auto`/`fit` 없음 — `min-w`와 다르게 `screen`은 있다) |
+| `size` | 숫자 `4 5 6 8 10 11 12` **만** (16 이상 없음, `full`/`auto`/`fit`/`screen` 전부 없음) |
+| `max-h` | `full screen` 만 (숫자 스케일 없음) |
 | max-w | `xs sm md lg xl 2xl 3xl 4xl 5xl full none` (임의 px 없음 — 가장 가까운 값을 고른다) |
 | 형태 | `rounded{,-xs,-sm,-md,-lg,-xl,-full,-none}`, `border{,-0,-2,-t,-r,-b,-l}`, `shadow-{sm,md,lg,none}` |
 | 기타 | `opacity-{0,40,50,60,75,100}`, `cursor-pointer/not-allowed`, `transition{,-colors,-opacity,-transform}`, `duration-{100,150,200,300}` |
