@@ -1,0 +1,7 @@
+/* kit 번들 진입점.
+ * source(none)으로 자동 소스 스캔을 끈다 — 소비 서비스의 마크업을 볼 수 없으므로
+ * safelist가 생성 대상의 전부다. */
+@import "tailwindcss" source(none);
+@import "../../tokens/tokens.css";
+@import "./safelist.css";
+@import "./components.css";

@@ -1,0 +1,46 @@
+/* safelist — 이 파일이 곧 디자인 시스템의 계약이다.
+ * 여기 없는 클래스는 번들에 없고, 쓰면 조용히 스타일이 안 먹는다.
+ * 스펙: docs/2026-08-28-kit-design.md §6.1 */
+
+/* ── 색: kit 토큰만. Tailwind 기본 팔레트는 넣지 않는다 ── */
+@source inline("{bg,text,border}-{bg,surface,surface-2,border,border-strong,text,muted,dim,accent,on-accent,success,warning,danger}");
+@source inline("{hover:,focus-visible:,active:,disabled:,group-hover:}{bg,text,border}-{surface,surface-2,border-strong,accent,muted,text,danger}");
+
+/* ── 간격: 4px 배수 ── */
+@source inline("{p,px,py,pt,pr,pb,pl,m,mx,my,mt,mr,mb,ml,gap,gap-x,gap-y}-{0,0.5,1,1.5,2,3,4,5,6,8,10,12,16}");
+@source inline("{space-x,space-y}-{0,1,2,3,4,6,8}");
+
+/* ── 타이포 ── */
+@source inline("text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl}");
+@source inline("font-{light,normal,medium,semibold,bold}");
+@source inline("leading-{tight,snug,normal,relaxed}");
+@source inline("tracking-{tight,normal,wide}");
+@source inline("{text-left,text-center,text-right,truncate,uppercase,tabular-nums,whitespace-nowrap}");
+
+/* ── 레이아웃 ── */
+@source inline("{block,inline-block,inline,flex,inline-flex,grid,hidden,contents}");
+@source inline("{md:,lg:,}{block,flex,grid,hidden}");
+@source inline("flex-{row,col,wrap,nowrap,1,auto,none}");
+@source inline("{items,justify,self}-{start,center,end,stretch}");
+@source inline("justify-{between,around,evenly}");
+@source inline("grid-cols-{1,2,3,4,5,6,12}");
+@source inline("{md:,lg:,}grid-cols-{1,2,3,4}");
+@source inline("col-span-{1,2,3,4,full}");
+@source inline("{relative,absolute,fixed,sticky,static}");
+@source inline("{inset-0,top-0,right-0,bottom-0,left-0}");
+@source inline("z-{0,10,20,30,40,50}");
+@source inline("overflow-{auto,hidden,x-auto,y-auto}");
+@source inline("w-{full,auto,fit,screen}");
+@source inline("h-{full,auto,fit,screen}");
+@source inline("min-h-{screen,full}");
+@source inline("max-w-{xs,sm,md,lg,xl,2xl,3xl,4xl,5xl,full,none}");
+@source inline("{mx-auto,shrink-0,grow,basis-0}");
+
+/* ── 형태 ── */
+@source inline("rounded{,-sm,-md,-lg,-xl,-full,-none}");
+@source inline("border{,-0,-2,-t,-r,-b,-l}");
+@source inline("shadow-{sm,md,lg,none}");
+@source inline("opacity-{0,40,50,60,75,100}");
+@source inline("{cursor-pointer,cursor-not-allowed,select-none,pointer-events-none}");
+@source inline("transition{,-colors,-opacity,-transform}");
+@source inline("duration-{100,150,200,300}");
