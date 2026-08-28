@@ -44,3 +44,29 @@
 @source inline("{cursor-pointer,cursor-not-allowed,select-none,pointer-events-none}");
 @source inline("transition{,-colors,-opacity,-transform}");
 @source inline("duration-{100,150,200,300}");
+
+/* ── 크기 (파일럿 리뷰에서 발견된 공백) ── */
+@source inline("{w,h}-{4,5,6,8,10,12,16,20,24,32,48,64}");
+@source inline("size-{4,5,6,8,10,12}");
+@source inline("w-{1/2,1/3,2/3,1/4,3/4}");
+@source inline("min-w-{0,full}");
+@source inline("min-h-{0,full}");
+@source inline("max-h-{full,screen}");
+
+/* ── 텍스트 처리 ── */
+@source inline("{break-words,break-all,break-normal,text-balance,text-pretty,text-ellipsis}");
+@source inline("whitespace-{normal,pre,pre-wrap}");
+@source inline("{underline,no-underline,line-through,italic,capitalize,lowercase}");
+@source inline("font-{sans,mono}");
+@source inline("{sr-only,not-sr-only}");
+
+/* ── 구분선·정렬·기타 ── */
+@source inline("divide-{y,x}");
+@source inline("divide-{border,border-strong}");
+@source inline("-m{t,b,l,r,x,y}-{1,2,3,4}");
+@source inline("{place-items-center,align-middle,align-top,list-none,list-disc}");
+@source inline("{object-cover,object-contain,aspect-square,aspect-video}");
+@source inline("ring-{0,1,2}");
+@source inline("ring-{accent,border,danger}");
+@source inline("focus-visible:ring-2");
+@source inline("outline-none");

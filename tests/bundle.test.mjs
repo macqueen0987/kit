@@ -37,9 +37,11 @@ test('토큰 색 유틸리티가 생성된다', () => {
 });
 
 test('Tailwind 기본 컬러 팔레트는 포함되지 않는다', () => {
-  const forbidden = ['.bg-red-500', '.text-blue-600', '.bg-zinc-900', '.text-gray-400'];
-  for (const cls of forbidden) {
-    assert.ok(!css.includes(cls), `기본 팔레트가 새어 들어왔다: ${cls}`);
+  // 미니파이어가 셀렉터를 콤마로 묶어도 잡히도록 정규식으로 검사한다
+  const forbidden = ['bg-red-500', 'text-blue-600', 'bg-zinc-900', 'text-gray-400'];
+  for (const name of forbidden) {
+    const re = new RegExp('\\.' + name.replace(/-/g, '\\-') + '[{,\\s]');
+    assert.ok(!re.test(css), `기본 팔레트가 새어 들어왔다: .${name}`);
   }
 });
 
@@ -51,9 +53,10 @@ test('간격 스케일이 생성된다', () => {
 
 test('스케일에 없는 간격은 생성되지 않는다', () => {
   // 4px 배수 리듬을 깨는 값 (스펙 §6.1)
-  for (const cls of ['.p-7', '.p-9', '.p-11', '.p-14']) {
-    assert.ok(!css.includes(cls + '{') && !css.includes(cls + ' '),
-      `스케일 밖 값이 생성됐다: ${cls}`);
+  // 미니파이어가 셀렉터를 콤마로 묶어도 잡히도록 정규식으로 검사한다
+  for (const name of ['p-7', 'p-9', 'p-11', 'p-14']) {
+    const re = new RegExp('\\.' + name.replace('-', '\\-') + '[{,\\s]');
+    assert.ok(!re.test(css), `스케일 밖 값이 생성됐다: .${name}`);
   }
 });
 
@@ -75,5 +78,16 @@ test('컴포넌트 클래스가 생성된다', () => {
   for (const cls of ['.btn', '.btn-primary', '.btn-ghost', '.btn-danger',
                      '.card', '.input', '.badge', '.alert', '.empty']) {
     assert.ok(css.includes(cls), `컴포넌트 클래스 누락: ${cls}`);
+  }
+});
+
+test('파일럿 리뷰에서 발견된 공백이 메워졌다', () => {
+  const required = [
+    '.w-8', '.h-8', '.w-12', '.size-6', '.min-w-0', '.w-1\\/2',
+    '.sr-only', '.font-mono', '.break-words', '.divide-y',
+    '.-mt-2', '.ring-2', '.ring-accent', '.whitespace-pre-wrap',
+  ];
+  for (const cls of required) {
+    assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
   }
 });
