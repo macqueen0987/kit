@@ -1,0 +1,56 @@
+// I3 — bundle/dist/app.css는 edge가 바인드 마운트로 그대로 서빙하는 배포 산출물이다.
+// safelist.css나 components.css를 고치고 pnpm build를 잊은 채 커밋하면 다른 모든
+// 테스트가 통과하고(그 테스트들은 이미 커밋된 dist만 읽는다) 실서비스 URL만
+// 조용히 낡은 채로 남는다. 이 테스트는 src를 실제로 다시 빌드해 커밋된 dist와
+// 바이트 단위로 비교한다 — 재빌드 비용이 100ms 남짓이라 매 pnpm test마다 돌려도
+// 부담이 없다.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
+
+const rootDir = fileURLToPath(new URL('..', import.meta.url));
+const distPath = join(rootDir, 'bundle', 'dist', 'app.css');
+
+test('dist/app.css가 src의 최신 빌드 결과와 바이트 동일하다 (I3)', () => {
+  assert.ok(existsSync(distPath), 'bundle/dist/app.css가 없다 — pnpm build를 먼저 실행해야 한다');
+
+  // pnpm의 node_modules는 심링크 구조라, .pnpm 스토어의 실제 경로(realpath)로
+  // @tailwindcss/cli의 진입 파일을 직접 실행하면 CLI 내부의 "tailwindcss" 패키지
+  // 해석이 그 realpath 기준으로 일어나 실패한다(node_modules/tailwindcss가 루트에는
+  // 없고 node_modules/@tailwindcss/cli/node_modules/tailwindcss에만 있기 때문).
+  // package.json의 "build" 스크립트가 실제로 쓰는 것과 똑같이 node_modules/.bin의
+  // 심링크 경로를 그대로 실행해야 pnpm build와 동일하게 동작한다 — 이것이 "실제
+  // pnpm build와 동일한 재빌드"를 보장하는 가장 신뢰할 수 있는 방법이다.
+  const binName = process.platform === 'win32' ? 'tailwindcss.CMD' : 'tailwindcss';
+  const cliBin = join(rootDir, 'node_modules', '.bin', binName);
+  assert.ok(existsSync(cliBin), `tailwindcss CLI를 찾을 수 없다: ${cliBin} — pnpm install을 먼저 실행해야 한다`);
+
+  const tmpDir = mkdtempSync(join(tmpdir(), 'kit-dist-drift-'));
+  const tmpOut = join(tmpDir, 'app.css');
+  try {
+    // shell:true + 배열 인자 조합은 Node 22부터 이스케이프 미흡을 이유로
+    // deprecation 경고를 낸다 — 인자는 전부 이 파일이 만든 경로뿐이라 인젝션
+    // 위험은 없지만, 경고 없이 넘어가도록 하나의 커맨드 문자열로 직접 조립한다.
+    const cmd = `"${cliBin}" -i "${join('bundle', 'src', 'app.css')}" -o "${tmpOut}" --minify`;
+    execFileSync(cmd, {
+      cwd: rootDir,
+      stdio: 'pipe',
+      shell: true,
+    });
+    const fresh = readFileSync(tmpOut, 'utf8');
+    const committed = readFileSync(distPath, 'utf8');
+    assert.equal(
+      fresh,
+      committed,
+      'bundle/dist/app.css가 bundle/src를 방금 다시 빌드한 결과와 다르다 — ' +
+      'safelist.css/components.css/tokens.css를 고친 뒤 pnpm build를 실행하지 않고 커밋했다. ' +
+      'pnpm build로 dist/app.css를 갱신하고 다시 커밋할 것.'
+    );
+  } finally {
+    rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

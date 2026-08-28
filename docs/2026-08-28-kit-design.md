@@ -1,8 +1,8 @@
 # kit 공용 디자인 시스템 설계
 
 - 작성일: 2026-08-28
-- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 11개
-- 상태: **1~3단계 구현 완료** (§9 참조). `agent-gate` 파일럿 결과는 `docs/2026-08-28-pilot-report.md` 참조
+- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 12개
+- 상태: **1~3단계 구현 완료** (§9 참조). `agent-gate` 파일럿 결과는 `docs/2026-08-28-pilot-report.md` 참조. 전체 브랜치 리뷰 fix wave 완료 — 상세는 `.superpowers/sdd/2026-08-28-kit-plan/task-7-report.md`의 "Final review fix wave" 절 참조
 
 ## 1. 목표
 
@@ -31,11 +31,13 @@
 | `mpw` | Tailwind 빌드 존재(`tailwind-build/input.css`) |
 | `stock` | Vite 앱(`web/`), 컴포넌트별 CSS |
 | `COLLARS` | pnpm 모노레포, React, BlockNote 등 외부 UI 포함 |
-| `logflare` `iot` `aitg` `chzzk-auth` | 각자 개별 CSS |
+| `logflare` `iot` `aitg` `chzzk-auth` `novel` | 각자 개별 CSS |
 
 `agent-gate`와 `itad`가 이미 `--bg / --surface / --text / --muted / --accent / --success / --warning / --danger / --border / --radius`라는 사실상 동일한 이름 체계를 쓰고 있다. **새로 만드는 게 아니라 이미 수렴한 것을 계약으로 확정하는 작업이다.**
 
 `profile`의 CSS가 `projects/mpw/nginx/html/profile/`에 복사되어 있다. 마이그레이션 시 함께 제거한다.
+
+**최종 리뷰 문서 정정 — `novel` 누락.** 이전 판은 위 표에서 `novel`을 빠뜨린 채 "소비 서비스 11개"로 적었는데, §5.2 accent 표와 `scripts/parse-tokens.mjs`의 `SERVICE_ACCENTS`(테스트로 12개가 고정돼 있다)는 이미 처음부터 `novel`을 포함한 12개였다 — 표·서술과 실제 코드가 어긋나 있었다. `novel`을 위 표와 §9 마이그레이션 순서에 추가해 12개로 맞춘다. `novel`이 §1 비목표에서 제외한 것은 안드로이드 앱뿐, 웹 서비스(`novel.code0987.me`, `novel-app-1`)는 원래부터 대상이었다.
 
 ## 3. 결정 사항
 
@@ -139,7 +141,19 @@ services/kit/
 
 Google Fonts CSS2 API는 `unicode-range`로 서브셋을 쪼개 내려주므로, 한글 글리프 전체를 받지 않는다. 자체 호스팅 대비 origin 하나가 늘지만(`fonts.googleapis.com` + `fonts.gstatic.com`) 관리 비용이 0이다.
 
-폰트 링크는 `kit.head()` 매크로와 번들의 `@import`가 각각 처리하므로 서비스 코드에는 나타나지 않는다.
+**폰트 로드는 번들의 `@import` 한 줄이 전부 처리한다** (`bundle/src/app.css` 최상단, 최종 리뷰 C1). `<link>` 하나로 토큰 스왑과 폰트 로드가 동시에 끝난다는 원래 약속이 이제 실제로 지켜진다.
+
+이전 판은 이 문단에서 "폰트 링크는 `kit.head()` 매크로와 번들의 `@import`가 각각 처리한다"고 서술했지만, 실제로는 번들에 폰트 `@import`가 전혀 없었다 — `tokens.css`의 `--font-sans`/`--font-mono`가 `"Noto Sans KR"`을 가리키기만 할 뿐, 그 폰트를 로드하는 코드가 번들 어디에도 없어 링크되지 않은 폰트 이름이었다. 결과적으로 모든 소비자가 `system-ui`로 조용히 대체됐고, `agent-gate` 파일럿만 예외적으로 문제없어 보였던 것은 그 서비스의 HTML이 폰트 `<link>` 태그를 손으로 추가해 이 결함을 가렸기 때문이다. 이번 리뷰에서 `bundle/src/app.css`에 아래 `@import`를 추가해 그 약속을 실제로 지키게 했다.
+
+```css
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap");
+```
+
+CSS 명세상 `@import`는 `@charset`과 블록 없는(empty) `@layer` 순서 선언을 제외한 모든 규칙보다 앞서야 하므로, 이 줄은 `app.css`의 다른 `@import`들보다도 위에 있다. `pnpm build` 후 `bundle/dist/app.css`를 직접 열어 이 `@import`가 파일 맨 앞부분에 그대로 살아 있는지, Tailwind 빌드가 순서를 바꾸거나 규칙을 지우지 않았는지 매번 확인한다(`tests/bundle.test.mjs`의 "C1" 테스트가 자동으로 이를 검사한다).
+
+**Jinja `kit.head()` 매크로는 아직 구현되지 않았다**(§9 참조 — `itad` 마이그레이션에서 최초 구현). 지금은 번들의 `@import` 하나가 폰트 로드 전체를 책임진다. 매크로가 생기더라도 `head()`는 `<link rel="stylesheet">` 자체를 내보내는 역할만 하고, 폰트는 계속 번들 안에서 처리된다 — 매크로가 폰트를 별도로 로드하지 않는다.
+
+소비 서비스는 속도를 위해 자체 `preconnect` 힌트(`fonts.googleapis.com`, `fonts.gstatic.com`)를 추가할 수 있지만, 폰트 `<link>` 자체를 추가할 필요는 더 이상 없다.
 
 ### 5.2 서비스별 accent
 
@@ -171,17 +185,24 @@ L을 0.780으로 고정하고 hue만 돌린다. 그래서 어느 서비스를 �
 | 축 | 허용 |
 |---|---|
 | 색 | **kit 토큰만.** Tailwind 기본 팔레트 전체 제외 |
-| 간격 | `0 0.5 1 1.5 2 2.5 3 3.5 4 5 6 8 10 12 16` (p/m/gap/space 전 방향) |
+| 간격 (p/m/gap, 방향별) | `0 0.5 1 1.5 2 2.5 3 3.5 4 5 6 8 10 12 16` |
+| `space-x/y` | `0 1 2 3 4 6 8` — p/m/gap과 별개 스케일이다(전 방향과 동일하지 않다) |
 | 타이포 | `text-xs`~`text-7xl`, weight 4종, leading 3종, tracking 3종 |
-| 레이아웃 | flex/grid/position/z/overflow 전반, `grid-cols-1~12`, `w-full`, `max-w-*` |
-| 크기 | `w/h/min-w/min-h/size`의 숫자 스케일(`4~64`, `11` 포함), `w-{1/2,1/3,2/3,1/4,3/4}` |
-| 형태 | `rounded{,-xs,-sm,-md,-lg,-xl,-full,-none}`, `border{,-0,-t,-b,-l,-r}`, `shadow-{sm,md,lg}` |
+| 레이아웃 | flex/grid/position/z/overflow 전반, `grid-cols-{1..6,12}`(12를 건너뛰지 않는다), `col-span-{1..4,full}`, `w-full`, `max-w-*` |
+| 크기 | `w/h/min-w/min-h`의 숫자 스케일(`4~64`, `11` 포함, 축마다 `full/auto/fit/screen` 지원 범위가 다르다), `size-*`는 `4~12`**만**(16 이상 없음), `w-{1/2,1/3,2/3,1/4,3/4}` — 축별 정확한 값은 `AGENTS.md` §2(safelist.css에서 직접 검증된 표)를 따른다 |
+| 형태 | `rounded{,-xs,-sm,-md,-lg,-xl,-full,-none}`, `border{,-0,-2,-t,-r,-b,-l}`, `shadow-{sm,md,lg,none}` |
 | 기타 | `opacity-*`, `transition-*`, `cursor-*` |
-| variant | `hover: focus-visible: active: disabled: group-hover: sm: md: lg: xl:` |
+| variant | `hover: focus-visible: active: disabled: group-hover: md: lg:` — **`sm:`/`xl:`는 의도적으로 없다**(아래 참조) |
+
+이 표는 `AGENTS.md` §2의 요약이다. `AGENTS.md`가 `safelist.css`와 대조해 검증된 1차 문서이므로, 둘이 어긋나면 이 표를 고친다.
+
+**최종 리뷰 문서 정정.** 이전 판은 이 표가 실제 `safelist.css`와 네 군데 어긋나 있었다 — `grid-cols`가 실제로는 `1~12` 전체가 아니라 `1..6,12`(7·8·9·10·11이 없다), `space-x/y`가 `p/m/gap`과 같은 스케일인 것처럼 "전 방향"으로 뭉뚱그려져 있었지만 실제로는 `0 1 2 3 4 6 8`로 다른 스케일, `size-*`가 `4~64`가 아니라 `4~12`만, `border` 목록에 `-2`(두께 2px)가 빠져 있었다. `AGENTS.md`는 이 네 항목 모두 처음부터 정확했다 — 이번에 스펙 쪽을 `AGENTS.md`에 맞춰 고쳤다.
+
+**최종 리뷰 C2 — breakpoint 커버리지를 넓히고 `sm:`/`xl:`는 뺐다.** 이전 판은 `md:`/`lg:`가 `block flex grid hidden grid-cols-1..4` 8개 클래스에서 그쳐, 반응형 대시보드를 표현할 수 없었다. `md:`/`lg:`에 간격(`p/px/py/m/mx/my/gap`), `flex-{row,col}`, `w-{full,auto}`, `col-span-*`, `text-{sm,base,lg,xl,2xl}`, `items-*`, `justify-*`를 추가했다(`bundle/src/safelist.css` 참조). `sm:`/`xl:`는 이 표의 이전 판이 나열하고 있었지만 실제로 생성된 적이 없었다 — 지금까지 어떤 마이그레이션에서도 필요했던 사례가 없어(`agent-gate` 파일럿도 `md:`/`lg:`까지만 요구했다), §9.1의 "필요한데 없는 클래스는 스케일 단위로만 반영한다, 개별 선제 추가 금지" 원칙을 breakpoint 축에도 그대로 적용해 뺐다. 다음 마이그레이션에서 실제로 필요해지면 그때 이번에 넓힌 범위와 동일하게 스케일 단위로 추가한다.
 
 `agent-gate` 파일럿(`docs/2026-08-28-pilot-report.md`)에서 하프스텝 간격(`gap-2.5` 등), `min-w`/`min-h`의 숫자 스케일 전체, 4px 라디우스 단계(`rounded-xs`)가 비어 있음이 드러나 채웠다. **체크박스/토글 컴포넌트는 여전히 없다** — kit에 대응하는 유틸리티·컴포넌트 클래스가 전혀 없어, 폼에 체크박스가 있는 서비스는 소규모 커스텀 CSS를 남길 수밖에 없다. §12의 후속 작업 최우선 항목이다.
 
-brotli 압축 후 **6.8KB**로 실측됐다(Task 3 fix round 기준, 파일럿 gap-fill 이후 **7.0KB**) — 스펙 초안의 80~120KB 예상은 실측 대비 자릿수 하나가 틀렸다. 렌더 블로킹 부담이 사실상 없는 수준이라, "실사용 데이터가 쌓이면 걷어낸다"는 축소 계획은 근거를 잃었다(§11.3, §12 참조). 초반에 유틸리티 범위를 넉넉히 유지하는 정책 그대로 간다.
+brotli 압축 후 **7.0KB**(파일럿 gap-fill 기준), 최종 리뷰의 C1 폰트 `@import`와 C2 breakpoint 확장 이후 **7.7KB**(raw 62.8KB)로 실측됐다 — 스펙 초안의 80~120KB 예상은 여전히 실측 대비 자릿수 하나가 틀렸다. 렌더 블로킹 부담이 사실상 없는 수준이라, "실사용 데이터가 쌓이면 걷어낸다"는 축소 계획은 근거를 잃었다(§11.3, §12 참조). 초반에 유틸리티 범위를 넉넉히 유지하는 정책 그대로 간다.
 
 `@source inline()`이 스캔 없이 클래스를 강제 생성하며, `{hover:,focus:,}underline` 형태의 확장 문법을 지원한다.
 
@@ -199,12 +220,17 @@ brotli 압축 후 **6.8KB**로 실측됐다(Task 3 fix round 기준, 파일럿 g
 .btn  .btn-primary  .btn-ghost  .btn-danger
 .card  .card-header  .card-body
 .input  .select  .textarea
-.badge  .badge-{ok,warn,danger,accent}
+.alert  .alert-{ok,warn,danger}
+.badge  .badge-{accent,ok,warn,danger}
 .table
-.alert-{ok,warn,danger}
 .empty
 .pagination
 ```
+
+**최종 리뷰 I2 — 베이스 클래스 + 모디파이어 조합이 필수인 것과 아닌 것을 구분한다.** 이전 판은 `.alert`(베이스: padding, flex, `border-left-width`)를 표에서 아예 빼먹고 `.alert-{ok,warn,danger}`만 적었다 — `<div class="alert-ok">`만 붙이면 padding 없이 눌린 채로 렌더되고 `border-left`도 투명해 보이지 않는다. `.badge`도 같은 함정이다: 베이스(`.badge`)는 padding·모양만 정의하고 배경·글자색은 모디파이어(`.badge-{accent,ok,warn,danger}`)가 낸다 — `.badge`만 쓰면 색 없는 투명한 알약이 남는다. `.btn`도 마찬가지로 색은 `.btn-{primary,ghost,danger}`가 낸다.
+
+- **베이스+모디파이어 둘 다 필요**: `.alert`+`.alert-*`, `.badge`+`.badge-*`, `.btn`+`.btn-*`.
+- **베이스만으로 완결**: `.card`(배경·테두리·radius가 이미 있다 — `.card-header`/`.card-body`는 모디파이어가 아니라 선택적 자식 구조), `.input`/`.select`/`.textarea`, `.table`, `.empty`, `.pagination`.
 
 ## 7. 소비 경로
 
@@ -261,6 +287,8 @@ Cache-Control: public, max-age=300, stale-while-revalidate=86400, stale-if-error
 
 이 규칙이 없으면 매번 "이건 v2인가?"로 시간을 쓴다.
 
+**최종 리뷰 I1 — `--kit-radius` 도입은 이 규칙상 파괴적이 아니다.** `tokens.css`에 프라이빗 토큰 `--kit-radius`(값은 `--radius`와 동일한 `0.625rem`)를 추가하고, `components.css`의 `.btn`/`.card`/`.input`,`.select`,`.textarea`/`.alert`가 `var(--radius)` 대신 `var(--kit-radius)`를 참조하도록 바꿨다. 기존 토큰(`--radius`)은 이름도 값도 그대로 남아 있고 계속 공개 내보내진다 — 삭제도 개명도 아니므로 추가일 뿐이다. 동기는 §9.1의 2번 항목이 지적하던 그림자 문제(소비 서비스가 자기 `:root`에서 `--radius`를 재정의하면 kit 컴포넌트의 모양이 조용히 따라 바뀌고 빠져나갈 방법이 없었다)를 kit 컴포넌트 클래스에 한해 근본적으로 없앤 것이다. Tailwind가 직접 생성하는 유틸리티 클래스(`rounded`, `rounded-lg` 등)는 여전히 공개 `--radius`/`--radius-*`를 참조한다 — 소비자가 그 토큰을 재정의해 자기 페이지의 `rounded` 계열 유틸리티를 바꿀 수 있어야 하므로, 이건 의도한 동작이다.
+
 ### 8.4 배포 흐름
 
 ```
@@ -279,20 +307,24 @@ services/kit 에서
 3. **중단하고 safelist 재점검** — 파일럿 결과를 반영한다. 완료(`docs/2026-08-28-pilot-report.md`)
 4. `itad` — `head()` / `header()` 매크로 최초 구현·실전 검증
 5. `profile` — 가장 오래된 CSS. `projects/mpw/nginx/html/profile/` 중복을 함께 제거한다
-6. `gallery` → `logflare` → `iot` → `mpw` → `aitg` → `chzzk-auth`
+6. `gallery` → `logflare` → `iot` → `mpw` → `aitg` → `chzzk-auth` → `novel`
 7. `stock/web` → `COLLARS` — React. COLLARS는 BlockNote 등 외부 UI와 얽혀 가장 복잡하므로 마지막
 
 각 단계는 독립 커밋으로 되돌릴 수 있어야 한다.
 
-**첫 구현 계획의 범위는 1~3단계까지였고, 완료됐다.** 4단계 이후는 파일럿에서 나온 safelist 수정과 매크로 API 변경을 반영한 뒤 별도 계획으로 쪼갠다. 11개 서비스 마이그레이션을 하나의 계획에 담으면 앞단의 학습이 뒷단에 반영되지 않는다.
+**첫 구현 계획의 범위는 1~3단계까지였고, 완료됐다.** 4단계 이후는 파일럿에서 나온 safelist 수정과 매크로 API 변경을 반영한 뒤 별도 계획으로 쪼갠다. 12개 서비스 마이그레이션을 하나의 계획에 담으면 앞단의 학습이 뒷단에 반영되지 않는다.
+
+**최종 리뷰 문서 정정 — `novel`이 6단계에 빠져 있었다.** §5.2 accent 표와 `SERVICE_ACCENTS`(테스트로 12개 고정)는 처음부터 `novel`(hue 20, rose)을 포함했는데, 이 마이그레이션 순서와 §2 현황 표에서만 누락돼 "12개 accent인데 11개 서비스"라는 어긋남이 있었다. `novel`을 6단계 끝에 추가해 12개로 맞췄다 — 순서상 `chzzk-auth` 다음, `stock/web`·`COLLARS`(React, 7단계) 이전에 둔 것은 `novel`도 나머지 6단계 서비스처럼 빌드 파이프라인이 없는 서비스이기 때문이다. 이로써 §7의 "Jinja 서비스 9개"(`itad`·`profile`·`gallery`·`logflare`·`iot`·`mpw`·`aitg`·`chzzk-auth`·`novel`)도 실제로 9개가 맞아떨어진다 — 이전 판은 8개만 나열해놓고 9개라고 적어 여기서도 어긋나 있었다.
 
 ### 9.1 표준 마이그레이션 절차
 
 파일럿(§9-2·3, `docs/2026-08-28-pilot-report.md`)에서 드러난 것을 다음 서비스부터 절차로 못박는다. 순서가 중요하다 — 1번을 건너뛰면 이후 모든 단계에서 "클래스를 붙였는데 스타일이 안 먹는다"는 진단하기 어려운 실패를 만난다.
 
-1. **서비스 CSS의 전역 리셋·범용 규칙을 `@layer base`로 감싼다.** kit 번들은 Tailwind v4라 모든 규칙이 `@layer` 안에 있는 반면, 소비 서비스 9개는 전부 레이어 없는(unlayered) 평범한 CSS다. CSS Cascading Layers 명세상 레이어 없는 일반 선언은 명시도·소스 순서와 무관하게 레이어 안의 어떤 선언보다 항상 이긴다 — 즉 `*,*::before,*::after{margin:0;padding:0}` 같은 흔한 리셋 하나가 kit의 모든 `@layer components`/`@layer utilities` 클래스를 그 속성에 한해 통째로 무력화한다(§11.1 참조). 리셋을 kit과 같은 이름의 `@layer base`로 감싸면, kit의 `<link>`가 먼저 로드되는 한 같은 레이어 안에서 소스 순서가 다시 유효해져 서비스 쪽 리셋이 계속 이기면서도 kit의 컴포넌트·유틸리티가 정상 동작한다.
-2. **서비스 `:root`의 변수명이 kit `@theme`가 내보내는 이름(`--radius`, `--radius-sm` 등 Tailwind 기본 테마 이름 포함)과 겹치는지 확인한다.** 겹치면 서비스 쪽 정의가 나중에 로드되어 kit이 의도한 값을 가린다. agent-gate의 `--radius`·`--radius-sm` 재정의가 실례다 — 안전한 값이 필요하면 서비스가 재정의하지 않은 이름(예: kit의 `--radius-xs`)을 쓴다.
-3. `:root` 토큰만 kit 매핑으로 교체한다(HTML·JS 무변경). 기존 서비스가 `var(--bg)` 같은 짧은 이름을 쓰고 있었다면 그대로 두고 kit `--color-*`로 리다이렉트만 한다.
+**최종 리뷰 C3 — 0단계(암묵적이지만 결코 무해하지 않다): kit의 `<link>`를 건다.** 아래 3번을 "`:root` 토큰만 교체하므로 HTML·JS 무변경, 즉 안전하고 눈에 띄지 않는 단계"라고 읽으면 안 된다 — 그보다 먼저, `<link>`를 붙이는 순간 kit이 번들에 포함한 **Tailwind Preflight 전체**가 페이지에 들어온다(§11.4 참조). Preflight는 `*{margin:0;padding:0;border:0 solid}`, `h1`~`h6`의 크기·굵기를 `inherit`로 리셋, `ol,ul,menu{list-style:none}`, `img,svg,video{display:block}`, `a{text-decoration:inherit}` 등 브라우저 기본 스타일을 광범위하게 지운다. `agent-gate` 파일럿은 원래 자체 전역 리셋을 갖고 있어 이 낙차가 드러나지 않았지만, 다음 마이그레이션 대상인 `itad`는 `src/dashboard/static/style.css`에 `*{box-sizing:border-box}` 하나뿐이고 템플릿의 헤딩·리스트가 전부 브라우저 기본값에 의존한다 — `<link>`만 붙여도 헤딩이 본문 크기로 줄고, 리스트 마커가 사라지고, 이미지 여백이 바뀌고, 링크 밑줄이 없어진다. Preflight는 제거하지 않는다 — kit이 Tailwind v4 기반인 이상 전제조건이고, 서비스가 자기 헤딩·리스트 스타일을 이미 갖고 있다면 그 규칙이 (1번을 따랐을 때) 어차피 나중에 로드돼 이긴다. `<link>`를 붙이기 전후로 반드시 강제 새로고침 스크린샷을 남겨 이 낙차를 미리 예상한다.
+
+1. **서비스 CSS의 전역 리셋·범용 규칙을 `@layer base`로 감싼다 — 감싸는 대상은 리셋뿐, 서비스 스타일시트 전체가 아니다.** kit 번들은 Tailwind v4라 모든 규칙이 `@layer` 안에 있는 반면, 소비 서비스 10개(React 빌드를 쓰는 `COLLARS`·`stock/web` 제외)는 전부 레이어 없는(unlayered) 평범한 CSS다. CSS Cascading Layers 명세상 레이어 없는 일반 선언은 명시도·소스 순서와 무관하게 레이어 안의 어떤 선언보다 항상 이긴다 — 즉 `*,*::before,*::after{margin:0;padding:0}` 같은 흔한 리셋 하나가 kit의 모든 `@layer components`/`@layer utilities` 클래스를 그 속성에 한해 통째로 무력화한다(§11.1 참조). 리셋을 kit과 같은 이름의 `@layer base`로 감싸면, kit의 `<link>`가 먼저 로드되는 한 같은 레이어 안에서 소스 순서가 다시 유효해져 서비스 쪽 리셋이 계속 이기면서도 kit의 컴포넌트·유틸리티가 정상 동작한다. **경계를 지킨다(최종 리뷰 I4)**: `.btn`/`.card`/`.input` 같은 서비스 고유 오버라이드 규칙은 `@layer`로 감싸지 않고 레이어 없이 그대로 둔다. 서비스 스타일시트 전체를 통째로 `@layer base`로 감싸버리면 그 오버라이드들도 함께 레이어 안에 들어가 버려, kit의 `@layer components`가 명시도와 무관하게 오히려 서비스를 이기기 시작한다 — 정확히 §11.1이 경고하는 우선순위 역전이 이번엔 서비스 쪽에서 일어난다. `@layer base { ... }`는 전역 리셋·범용 UA 재정의 블록만 좁게 감싸고, 서비스가 kit을 의도적으로 오버라이드하는 규칙은 밖에 남긴다.
+2. **서비스 `:root`의 변수명이 kit `@theme`가 내보내는 이름(`--radius`, `--radius-sm` 등 Tailwind 기본 테마 이름 포함)과 겹치는지 확인한다.** 겹치면 서비스 쪽 정의가 나중에 로드되어 kit이 의도한 값을 가린다. agent-gate의 `--radius`·`--radius-sm` 재정의가 실례다 — 안전한 값이 필요하면 서비스가 재정의하지 않은 이름(예: kit의 `--radius-xs`)을 쓴다. **최종 리뷰 I1 — kit 컴포넌트 클래스(`.btn`/`.card`/`.input`,`.select`,`.textarea`/`.alert`)는 이 문제에서 이미 벗어났다**(§8.3 참조) — 내부적으로 공개 `--radius`가 아니라 소비자가 재정의할 이유가 없는 프라이빗 `--kit-radius`를 쓰기 때문이다. 이 항목이 여전히 유효한 이유는 Tailwind가 직접 생성하는 유틸리티 클래스(`rounded`, `rounded-lg` 등)가 계속 공개 `--radius`/`--radius-*`를 참조하도록 의도돼 있어서다 — 그 유틸리티들에는 이 확인이 그대로 필요하다.
+3. `:root` 토큰만 kit 매핑으로 교체한다. 기존 서비스가 `var(--bg)` 같은 짧은 이름을 쓰고 있었다면 그대로 두고 kit `--color-*`로 리다이렉트만 한다. **"HTML·JS 무변경"은 마크업·스크립트를 건드리지 않는다는 뜻일 뿐, 화면이 이전과 똑같아 보인다는 뜻이 아니다** — 렌더링에 실제로 영향을 주는 사건은 이미 0단계에서 일어났다(Preflight). 이 단계 자체(색상 변수 리다이렉트)는 안전하지만, 그 안전함을 "`<link>` 하나 걸었을 뿐인데 왜 헤딩 크기가 바뀌었지?"라는 관찰과 혼동해 원인을 색 토큰 쪽에서 찾는 일이 없어야 한다.
 4. 브라우저 강제 새로고침으로 표면 계단·텍스트 가독성·의미색 구분·레이아웃을 확인한다. 여기서 "스타일이 안 먹는다"가 나오면 원인을 safelist 구멍과 레이어 충돌 둘 다 의심한다 — 둘의 겉보기 증상이 동일하다.
 5. JS가 DOM 구조를 만들지 않는 영역부터 유틸리티 클래스로 전환한다. id·`data-*`는 건드리지 않는다. 필요한데 없는 클래스는 즉시 메모하고, 스케일 단위로 safelist에 반영한다(개별 클래스 추가 금지 — 같은 이유로 반복 방문하게 된다).
 6. 전환한 영역에서만 쓰이던 죽은 CSS 규칙을 제거한다. JS가 참조하는 클래스는 지우지 않는다.
@@ -325,9 +357,38 @@ edge Caddy 설정 변경 시 `kit.code0987.me` 라우팅이 함께 검증되어�
 
 ### 11.3 번들 크기 (실측)
 
-**초안의 80~120KB(brotli) 예상은 틀렸다.** 실측은 raw 47.8KB / brotli **6.8KB**(Task 3 기준)이고, 파일럿에서 safelist를 확장한 뒤에도 raw 50.8KB / brotli **7.0KB**다 — 예상의 약 1/12~1/17 수준으로, 자릿수 하나가 틀렸다. Task 3 리뷰가 safelist의 카테시안 전개 완전성(색 39/39, 상태 variant 21/21, breakpoint 8/8, 간격 13/13)을 전수 검증했으므로 이는 safelist가 부실해서가 아니라 애초의 추정 자체가 근거 없이 컸던 것이다.
+**초안의 80~120KB(brotli) 예상은 틀렸다.** 실측은 raw 47.8KB / brotli **6.8KB**(Task 3 기준)이고, 파일럿에서 safelist를 확장한 뒤 raw 50.8KB / brotli **7.0KB**, 최종 리뷰의 C1(폰트 `@import`)·C2(breakpoint 확장) 이후 raw **62.8KB** / brotli **7.7KB**다 — 예상의 약 1/10~1/15 수준으로, 여전히 자릿수 하나가 틀렸다. Task 3 리뷰가 safelist의 카테시안 전개 완전성(색 39/39, 상태 variant 21/21, breakpoint 8/8, 간격 13/13)을 전수 검증했으므로 이는 safelist가 부실해서가 아니라 애초의 추정 자체가 근거 없이 컸던 것이다.
 
-brotli 7KB는 렌더 블로킹 부담이 사실상 없는 수준이다. 이 항목은 더 이상 리스크가 아니다 — §12의 "safelist 축소" 후속 작업도 이 실측 앞에서 근거를 잃어 제거한다.
+brotli 7~8KB는 렌더 블로킹 부담이 사실상 없는 수준이다. 이 항목은 더 이상 리스크가 아니다 — §12의 "safelist 축소" 후속 작업도 이 실측 앞에서 근거를 잃어 제거한다.
+
+### 11.4 kit이 Tailwind Preflight 전체를 들여온다 (최종 리뷰 C3)
+
+빌드된 `dist/app.css`의 `@layer base`에는 Tailwind의 표준 Preflight가 그대로 들어 있다. 최소한:
+
+```
+*, ::before, ::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; border: 0 solid; }
+h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+ol, ul, menu { list-style: none; }
+img, svg, video { display: block; }
+a { text-decoration: inherit; }
+```
+
+이전 판의 스펙 §9.1은 "`:root` 토큰만 교체(HTML·JS 무변경)"를 안전하고 눈에 띄지 않는 단계로 서술했는데, 이는 Preflight를 빠뜨린 서술이다 — **kit의 `<link>`를 붙이는 행위 자체가 이미 헤딩·리스트·이미지·링크의 렌더링을 바꾼다**, 토큰 스왑을 하기도 전에. `agent-gate` 파일럿은 자체 전역 리셋을 이미 갖고 있어 이 낙차가 가려졌지만, 다음 대상 `itad`는 `src/dashboard/static/style.css`에 `*{box-sizing:border-box}` 하나뿐이라 템플릿의 헤딩·리스트가 전부 브라우저 기본값에 의존한다 — `itad`에서는 이 낙차가 처음으로 실전에서 드러날 것이다.
+
+Preflight는 제거하지 않는다 — kit이 Tailwind v4를 베이스로 쓰는 이상 존재가 전제조건이고(§3 결정 사항), 서비스가 자기 헤딩·리스트 스타일을 갖고 있다면 §9.1 1번을 따랐을 때 그 규칙이 나중에 로드돼 이긴다. 대신 **§9.1에 0단계로 이 사실을 명문화**하고, `AGENTS.md`에도 Preflight가 재설정하는 항목을 표로 남겨 마이그레이션 전 기대치를 맞춘다.
+
+### 11.5 `@layer` 순서가 로드 순서에 암묵적으로 의존했다 (최종 리뷰 I4)
+
+`bundle/src/app.css`는 `@import "tailwindcss"`가 내부적으로 만드는 `@layer properties, theme, base, components, utilities` 블록들의 **첫 등장 순서**에만 의존했고, 그 순서를 명시적으로 선언하는 문이 없었다. kit 번들 혼자 로드될 때는 문제가 없지만(파일 안에서 순서가 이미 고정돼 있으므로), Vite/React 소비자(`COLLARS`, `stock/web`)처럼 자기만의 named layer를 쓰는 CSS를 kit보다 먼저 로드하는 페이지에서는, 전체 문서에서 레이어 이름이 처음 언급된 순서가 최종 우선순위를 정한다 — kit이 나중에 로드되면 kit 5개 레이어끼리의 상대 순서가 다른 문서의 개입으로 흔들릴 수 있었다.
+
+CSS Cascading and Layers 명세는 "`@import` 규칙은 `@charset`과 **블록 없는(empty) `@layer` 순서 선언**을 제외한 모든 규칙보다 앞서야 한다"고 정의해, 이 순서 선언 패턴을 위한 예외를 명시적으로 두고 있다. `bundle/src/app.css` 맨 위에 다음 한 줄을 추가했다:
+
+```css
+@layer properties, theme, base, components, utilities;
+```
+
+`pnpm build`로 빌드한 `bundle/dist/app.css`에서 이 문이 파일 맨 앞(폰트 `@import`보다도 앞)에 그대로 살아남는 것을 확인했다 — Tailwind 빌드가 재배치하거나 지우지 않는다(`tests/bundle.test.mjs`의 "I4" 테스트가 이를 자동 검사한다). 이제 kit의 5개 레이어는 로드 순서와 무관하게 항상 이 상대 순서를 유지한다.
 
 ## 12. 후속 작업
 

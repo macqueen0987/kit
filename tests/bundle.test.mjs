@@ -11,6 +11,26 @@ test('빌드 산출물이 존재한다', () => {
 
 const css = existsSync(distUrl) ? readFileSync(distUrl, 'utf8') : '';
 
+// I2 — 단순 css.includes(cls)는 부분 문자열로도 통과한다. 예를 들어
+// css.includes('.alert')는 '.alert-ok'만 있어도 참이라, ".alert" 베이스 클래스
+// 자체가 번들에서 빠져도 테스트가 못 잡는다(.btn/.btn-primary, .card/.card-header,
+// .badge/.badge-accent, .bg-surface/.bg-surface-2도 동일한 함정). 클래스 이름 뒤에
+// 셀렉터 구분자(콤마·공백·중괄호·콜론) 또는 파일 끝이 오는지 확인하는 경계 인식
+// 매칭으로 모든 양성 단언을 통일한다 — 아래 forbidden-class 테스트가 이미 쓰던
+// 방식과 같은 원리다.
+function classSelectorRegExp(name) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escaped + '(?![\\w-])');
+}
+
+function assertClass(cssText, name, msg) {
+  assert.ok(classSelectorRegExp(name).test(cssText), msg ?? `유틸리티 누락: ${name}`);
+}
+
+function assertClasses(cssText, names) {
+  for (const name of names) assertClass(cssText, name);
+}
+
 test('토큰이 CSS 변수로 노출된다', () => {
   for (const name of ['bg', 'surface', 'surface-2', 'text', 'muted', 'accent', 'danger']) {
     assert.ok(css.includes(`--color-${name}:`), `변수 누락: --color-${name}`);
@@ -25,15 +45,24 @@ test('tokens.css의 색 토큰이 하나도 빠짐없이 번들에 실린다', (
   assert.deepEqual(missing, [], `번들에 없는 토큰: ${missing.join(', ')}`);
 });
 
+test('I1 — 컴포넌트 클래스가 프라이빗 --kit-radius를 쓰고 공개 --radius를 참조하지 않는다', () => {
+  assert.ok(css.includes('--kit-radius:'), '--kit-radius 토큰 누락');
+  for (const cls of ['.btn{', '.card{', '.alert{']) {
+    const start = css.indexOf(cls);
+    assert.ok(start !== -1, `${cls} 규칙을 찾을 수 없다`);
+    const end = css.indexOf('}', start);
+    const body = css.slice(start, end);
+    assert.ok(body.includes('var(--kit-radius)'), `${cls} 규칙이 --kit-radius를 쓰지 않는다`);
+    assert.ok(!body.includes('var(--radius)'), `${cls} 규칙이 여전히 공개 --radius를 참조한다 — 소비자 재정의에 노출된다`);
+  }
+});
+
 test('토큰 색 유틸리티가 생성된다', () => {
-  const required = [
+  assertClasses(css, [
     '.bg-surface', '.bg-surface-2', '.bg-accent', '.bg-danger',
     '.text-muted', '.text-dim', '.text-accent',
     '.border-border', '.border-border-strong',
-  ];
-  for (const cls of required) {
-    assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
-  }
+  ]);
 });
 
 test('Tailwind 기본 컬러 팔레트는 포함되지 않는다', () => {
@@ -61,11 +90,25 @@ test('스케일에 없는 간격은 생성되지 않는다', () => {
 });
 
 test('레이아웃·타이포 유틸리티가 생성된다', () => {
-  for (const cls of ['.flex', '.grid', '.grid-cols-3', '.items-center',
+  assertClasses(css, ['.flex', '.grid', '.grid-cols-3', '.items-center',
                      '.justify-between', '.w-full', '.hidden',
-                     '.text-sm', '.text-2xl', '.font-medium', '.rounded-lg']) {
-    assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
-  }
+                     '.text-sm', '.text-2xl', '.font-medium', '.rounded-lg']);
+});
+
+test('C2 — md:/lg: 반응형 커버리지가 레이아웃 스위치 너머로 확장됐다', () => {
+  assertClasses(css, [
+    '.md\\:p-4', '.md\\:gap-4', '.lg\\:p-6', '.lg\\:gap-6',
+    '.md\\:flex-col', '.lg\\:flex-row',
+    '.md\\:w-full', '.lg\\:w-auto',
+    '.md\\:col-span-2', '.lg\\:col-span-4',
+    '.md\\:text-lg', '.lg\\:text-xl',
+    '.md\\:items-center', '.lg\\:justify-between',
+  ]);
+});
+
+test('C2 — sm:/xl:는 의도적으로 없다 (스펙·safelist 합의)', () => {
+  const re = /\.(sm|xl)\\:/;
+  assert.ok(!re.test(css), 'sm:/xl: variant가 생성됐다 — safelist.css 주석과 스펙 §6.1을 함께 갱신했는지 확인');
 });
 
 test('variant가 생성된다', () => {
@@ -75,10 +118,12 @@ test('variant가 생성된다', () => {
 });
 
 test('컴포넌트 클래스가 생성된다', () => {
-  for (const cls of ['.btn', '.btn-primary', '.btn-ghost', '.btn-danger',
-                     '.card', '.input', '.badge', '.alert', '.empty']) {
-    assert.ok(css.includes(cls), `컴포넌트 클래스 누락: ${cls}`);
-  }
+  assertClasses(css, ['.btn', '.btn-primary', '.btn-ghost', '.btn-danger',
+                     '.card', '.card-header', '.card-body',
+                     '.input', '.select', '.textarea',
+                     '.badge', '.badge-accent', '.badge-ok', '.badge-warn', '.badge-danger',
+                     '.alert', '.alert-ok', '.alert-warn', '.alert-danger',
+                     '.empty', '.pagination', '.table']);
 });
 
 test('파일럿 리뷰에서 발견된 공백이 메워졌다', () => {
@@ -104,4 +149,24 @@ test('Task 7 파일럿 리포트에서 드러난 safelist 공백이 메워졌다
   for (const cls of required) {
     assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
   }
+});
+
+test('C1 — 폰트 @import가 다른 규칙보다 앞서 살아남는다', () => {
+  const importIdx = css.indexOf('@import "https://fonts.googleapis.com/css2');
+  assert.ok(importIdx !== -1, '폰트 @import가 번들에 없다 — bundle/src/app.css 확인');
+  assert.ok(css.includes('Noto+Sans+KR'), 'Noto Sans KR 서브셋 요청 누락');
+  assert.ok(css.includes('Noto+Sans+Mono'), 'Noto Sans Mono 서브셋 요청 누락');
+  // @layer 순서 선언과 @charset 정도만 앞에 올 수 있고, 실질 규칙(@layer 블록 등)은
+  // 이 @import 뒤에 와야 한다 — 앞쪽에 여는 중괄호 '{'가 없어야 한다는 뜻이다.
+  const before = css.slice(0, importIdx);
+  assert.ok(!before.includes('{'), '@import보다 앞에 블록 규칙이 와 있다 — CSS 명세 위반으로 빌드가 이를 무시하거나 재배치했을 수 있다');
+});
+
+test('I4 — 레이어 순서 선언이 파일 맨 앞에 살아남는다', () => {
+  const layerIdx = css.indexOf('@layer properties,theme,base,components,utilities;');
+  const importIdx = css.indexOf('@import "https://fonts.googleapis.com/css2');
+  assert.ok(layerIdx !== -1, '@layer 순서 선언이 번들에 없다');
+  assert.ok(layerIdx < importIdx, '@layer 순서 선언이 폰트 @import보다 뒤에 있다');
+  const before = css.slice(0, layerIdx);
+  assert.ok(!before.includes('{'), '@layer 순서 선언보다 앞에 블록 규칙이 와 있다');
 });

@@ -1,6 +1,29 @@
 /* kit 번들 진입점.
  * source(none)으로 자동 소스 스캔을 끈다 — 소비 서비스의 마크업을 볼 수 없으므로
  * safelist가 생성 대상의 전부다. */
+
+/* I4 — 레이어 순서를 명시적으로 고정한다. CSS Cascading and Layers 명세상
+ * "@import 규칙은 @charset과 블록 없는(empty) @layer 문을 제외한 모든 규칙보다
+ * 앞서야 한다"고 정의돼 있어, 블록 없는 @layer 순서 선언은 @import보다도 앞에 둘 수
+ * 있다(§4 참조 — 명세가 이 패턴을 위해 만든 예외다). kit 번들 혼자 로드될 때는
+ * Tailwind가 내부에서 생성하는 @layer properties/theme/base/components/utilities
+ * 블록의 첫 등장 순서만으로 충분하지만, 소비 서비스가 자체적으로 named layer를 쓰는
+ * CSS(Vite/React 등)를 kit보다 먼저 로드하면 그 문서 전체에서 레이어 이름이 처음
+ * 언급된 순서가 최종 순위를 결정한다 — kit이 나중에 로드되며 그 상대 순서를 이 문
+ * 없이는 보장할 수 없다. 아래 문을 파일 첫 줄에 둬서, kit의 5개 레이어끼리의
+ * 상대 순서만은 로드 시점과 무관하게 항상 고정한다. */
+@layer properties, theme, base, components, utilities;
+
+/* C1 — 번들이 선언하는 폰트를 번들이 직접 로드한다. Noto Sans KR/Noto Sans Mono는
+ * tokens.css의 --font-sans/--font-mono가 참조하지만, 이 @import가 없으면 그 값은
+ * 로드되지 않은 글꼴 이름일 뿐이라 브라우저가 system-ui로 조용히 대체한다
+ * (스펙 §5.1 참조 — 이 <link> 하나로 충분해야 한다는 약속을 여기서 지킨다).
+ * CSS 명세상 @import는 @charset과 위 레이어 순서 문을 제외한 모든 규칙보다
+ * 앞서야 하므로, 이 줄은 반드시 다른 @import들보다 위, 그리고 실질적 규칙보다
+ * 위에 있어야 한다. 소비 서비스는 속도를 위해 자체 preconnect 힌트를 추가할 수는
+ * 있지만, 더 이상 폰트 <link> 자체를 추가할 필요는 없다. */
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap");
+
 @import "tailwindcss" source(none);
 @import "../../tokens/tokens.css";
 @import "./safelist.css";

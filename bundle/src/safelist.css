@@ -2,6 +2,17 @@
  * 여기 없는 클래스는 번들에 없고, 쓰면 조용히 스타일이 안 먹는다.
  * 스펙: docs/2026-08-28-kit-design.md §6.1 */
 
+/* 최종 리뷰 C2 — breakpoint는 md:/lg: 둘만 지원한다. sm:/xl:는 넣지 않는다.
+ * 스펙 초안(§6.1)은 sm: md: lg: xl: 네 개를 다 나열했지만, 실제로 필요했던 사례가
+ * 지금까지 하나도 없었다 — agent-gate 파일럿에서도 md:/lg: 이상은 요구되지 않았다.
+ * §9.1의 "필요한데 없는 클래스는 즉시 메모하고 스케일 단위로 반영한다, 개별 추가는
+ * 금지"라는 원칙을 breakpoint 축에도 그대로 적용한다: 쓰이지도 않을 것을 먼저
+ * 만들어두면 스캔 없는 중앙 빌드에서 그 존재 자체가 "이걸 써도 되나?"라는 잘못된
+ * 신호를 준다. 다음 마이그레이션에서 sm:/xl:가 실제로 필요해지면 그때 스케일
+ * 단위로(레이아웃 4종 + 이번에 넓힌 간격/타이포/flex/col-span 전부) 추가한다.
+ * 스펙 §6.1과 AGENTS.md §2에서도 sm:/xl: 항목을 뺐다 — 문서와 safelist가 어긋나면
+ * §0의 조용한 실패를 그대로 재현한다. */
+
 /* ── 색: kit 토큰만. Tailwind 기본 팔레트는 넣지 않는다 ── */
 @source inline("{bg,text,border}-{bg,surface,surface-2,border,border-strong,text,muted,dim,accent,on-accent,success,warning,danger}");
 @source inline("{hover:,focus-visible:,active:,disabled:,group-hover:}{bg,text,border}-{surface,surface-2,border-strong,accent,muted,text,danger}");
@@ -12,8 +23,15 @@
 @source inline("{p,px,py,pt,pr,pb,pl,m,mx,my,mt,mr,mb,ml,gap,gap-x,gap-y}-{0,0.5,1,1.5,2,2.5,3,3.5,4,5,6,8,10,12,16}");
 @source inline("{space-x,space-y}-{0,1,2,3,4,6,8}");
 
+/* C2 — md:/lg:가 레이아웃 스위치 4개(block/flex/grid/hidden)에서 그치면 반응형
+ * 대시보드를 표현할 수 없다. 간격 축은 p/px/py/m/mx/my/gap만 넓힌다(pt/pr/pb/pl,
+ * space-x/y는 브레이크포인트에서 개별적으로 방향을 뒤집을 일이 드물어 제외) —
+ * 위 기본 스케일과 동일한 값 목록을 그대로 재사용한다. */
+@source inline("{md:,lg:,}{p,px,py,m,mx,my,gap}-{0,0.5,1,1.5,2,2.5,3,3.5,4,5,6,8,10,12,16}");
+
 /* ── 타이포 ── */
 @source inline("text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl,6xl,7xl}");
+@source inline("{md:,lg:,}text-{sm,base,lg,xl,2xl}");
 @source inline("font-{light,normal,medium,semibold,bold}");
 @source inline("leading-{tight,snug,normal,relaxed}");
 @source inline("tracking-{tight,normal,wide}");
@@ -23,16 +41,21 @@
 @source inline("{block,inline-block,inline,flex,inline-flex,grid,hidden,contents}");
 @source inline("{md:,lg:,}{block,flex,grid,hidden}");
 @source inline("flex-{row,col,wrap,nowrap,1,auto,none}");
+@source inline("{md:,lg:,}flex-{row,col}");
 @source inline("{items,justify,self}-{start,center,end,stretch}");
+@source inline("{md:,lg:,}{items,justify}-{start,center,end,stretch}");
 @source inline("justify-{between,around,evenly}");
+@source inline("{md:,lg:,}justify-{between,around,evenly}");
 @source inline("grid-cols-{1,2,3,4,5,6,12}");
 @source inline("{md:,lg:,}grid-cols-{1,2,3,4}");
 @source inline("col-span-{1,2,3,4,full}");
+@source inline("{md:,lg:,}col-span-{1,2,3,4,full}");
 @source inline("{relative,absolute,fixed,sticky,static}");
 @source inline("{inset-0,top-0,right-0,bottom-0,left-0}");
 @source inline("z-{0,10,20,30,40,50}");
 @source inline("overflow-{auto,hidden,x-auto,y-auto}");
 @source inline("w-{full,auto,fit,screen}");
+@source inline("{md:,lg:,}w-{full,auto}");
 @source inline("h-{full,auto,fit,screen}");
 @source inline("min-h-{screen,full}");
 @source inline("max-w-{xs,sm,md,lg,xl,2xl,3xl,4xl,5xl,full,none}");
