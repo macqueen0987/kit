@@ -28,4 +28,10 @@
   --font-mono: "Noto Sans Mono", ui-monospace, SFMono-Regular, monospace;
 
   --radius: 0.625rem;
+
+  /* Tailwind 기본 radius 스케일의 xs 단계(기본값 0.125rem)를 4px로 재정의한다.
+   * agent-gate 파일럿에서 --radius-sm이 서비스 :root 재정의(8px)와 이름이 겹쳐
+   * kit이 의도한 4px를 못 냈다 — rounded-xs는 다른 변수 이름을 쓰므로 이 충돌을
+   * 피해 간다. 서비스가 --radius-xs를 재정의하지 않는 한 항상 4px다. */
+  --radius-xs: 0.25rem;
 }

@@ -91,3 +91,17 @@ test('파일럿 리뷰에서 발견된 공백이 메워졌다', () => {
     assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
   }
 });
+
+test('Task 7 파일럿 리포트에서 드러난 safelist 공백이 메워졌다', () => {
+  // gap-2.5: check-row의 원래 10px gap을 재현하지 못했던 하프스텝 공백
+  // min-w-*/min-h-*: 숫자 스케일 자체가 전무했다 (0/full/screen뿐)
+  // rounded-xs: --radius-sm 이름 충돌을 피해 정확한 4px를 내는 escape hatch
+  const required = [
+    '.gap-2\\.5', '.p-2\\.5', '.mb-3\\.5',
+    '.min-w-11', '.min-h-11', '.min-w-24', '.min-h-32',
+    '.rounded-xs',
+  ];
+  for (const cls of required) {
+    assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
+  }
+});
