@@ -1,0 +1,31 @@
+/* kit 디자인 토큰 — 단일 진실 공급원
+ * 스펙: docs/2026-08-28-kit-design.md §5
+ * 값을 바꾸는 것은 파괴적 변경이 아니다. 이름을 바꾸거나 지우는 것만 major다. */
+
+@theme {
+  /* 표면 — L값만 올린 계단. 중립색은 hue 285로 살짝 치우쳐 있다 */
+  --color-bg:            oklch(0.145 0.005 285);
+  --color-surface:       oklch(0.185 0.006 285);
+  --color-surface-2:     oklch(0.225 0.007 285);
+  --color-border:        oklch(0.300 0.008 285);
+  --color-border-strong: oklch(0.400 0.010 285);
+
+  /* 텍스트 — dim은 라벨·비활성 전용. 본문에 쓰지 않는다 */
+  --color-text:  oklch(0.970 0.000 285);
+  --color-muted: oklch(0.720 0.012 285);
+  --color-dim:   oklch(0.560 0.012 285);
+
+  /* 의미색 */
+  --color-accent:    oklch(0.780 0.130 185);
+  --color-success:   oklch(0.800 0.160 150);
+  --color-warning:   oklch(0.830 0.140 85);
+  --color-danger:    oklch(0.700 0.170 25);
+
+  /* accent 위에 얹는 텍스트 */
+  --color-on-accent: oklch(0.160 0.010 285);
+
+  --font-sans: "Noto Sans KR", "Noto Sans", system-ui, sans-serif;
+  --font-mono: "Noto Sans Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --radius: 0.625rem;
+}
