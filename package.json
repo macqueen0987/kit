@@ -1,0 +1,13 @@
+{
+  "name": "@code0987/kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tailwindcss -i bundle/src/app.css -o bundle/dist/app.css --minify",
+    "test": "node --test tests/"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0"
+  }
+}
