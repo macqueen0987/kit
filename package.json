@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tailwindcss -i bundle/src/app.css -o bundle/dist/app.css --minify",
-    "test": "node --test tests/"
+    "test": "node --test \"tests/*.test.mjs\""
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.0.0"
