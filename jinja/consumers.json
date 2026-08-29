@@ -7,16 +7,43 @@
     "서비스를 마이그레이션할 때 이 목록에 추가한다. 순서는 스펙 §9 마이그레이션 순서를 따른다."
   ],
   "consumers": [
-    { "service": "itad", "path": "../itad/src/dashboard/templates/_kit.html" }
+    {
+      "service": "itad",
+      "path": "../itad/src/dashboard/templates/_kit.html"
+    },
+    {
+      "service": "profile",
+      "path": "../profile/templates/_kit.html"
+    }
   ],
   "pending": [
-    { "service": "profile", "note": "스펙 §9-5" },
-    { "service": "gallery", "note": "스펙 §9-6" },
-    { "service": "logflare", "note": "스펙 §9-6" },
-    { "service": "iot", "note": "스펙 §9-6" },
-    { "service": "mpw", "note": "스펙 §9-6" },
-    { "service": "aitg", "note": "스펙 §9-6" },
-    { "service": "chzzk-auth", "note": "스펙 §9-6" },
-    { "service": "novel", "note": "스펙 §9-6" }
+    {
+      "service": "gallery",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "logflare",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "iot",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "mpw",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "aitg",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "chzzk-auth",
+      "note": "스펙 §9-6"
+    },
+    {
+      "service": "novel",
+      "note": "스펙 §9-6"
+    }
   ]
 }
