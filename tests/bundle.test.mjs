@@ -185,6 +185,9 @@ test('파일럿 리뷰에서 발견된 공백이 메워졌다', () => {
     '.w-8', '.h-8', '.w-12', '.size-6', '.min-w-0', '.w-1\\/2',
     '.sr-only', '.font-mono', '.break-words', '.divide-y',
     '.-mt-2', '.ring-2', '.ring-accent', '.whitespace-pre-wrap',
+    // itad 마이그레이션에서 드러난 구멍 — 테두리 폭·색은 있는데 선 종류가 없었다.
+    // 빈 상태 박스를 점선으로 두르는 패턴을 유틸리티로 표현할 방법이 없었다.
+    '.border-solid', '.border-dashed', '.border-dotted', '.border-none',
   ];
   for (const cls of required) {
     assert.ok(css.includes(cls), `유틸리티 누락: ${cls}`);
