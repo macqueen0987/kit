@@ -23,10 +23,15 @@ export const SERVICE_ACCENTS = [
   { name: 'COLLARS',    hue: 265, chroma: 0.130, nick: 'indigo' },
   { name: 'profile',    hue: 285, chroma: 0.115, nick: 'violet' },
   { name: 'mpw',        hue: 305, chroma: 0.130, nick: 'purple' },
-  { name: 'gallery',    hue: 330, chroma: 0.140, nick: 'magenta' },
   { name: 'novel',      hue:  20, chroma: 0.140, nick: 'rose' },
   { name: 'itad',       hue:  55, chroma: 0.150, nick: 'orange' },
-  { name: 'stock',      hue:  95, chroma: 0.125, nick: 'gold' },
+  // gallery 는 원래 330(magenta)이었다. 사진 갤러리라 강조색이 사진과 경쟁하면
+  // 안 되고, 실제로 채도를 낮춘 골드(oklch 0.738 0.075 79)를 쓰고 있었다.
+  // 마이그레이션에서 그 정체성을 유지하되 kit 규율(L 0.780, chroma 0.09~0.13)
+  // 안으로 들여왔다. hue 75 는 itad(55)·stock(95)에서 각각 정확히 20도 떨어져
+  // "20도 이상" 규칙을 그대로 통과한다. 330 은 비었다.
+  { name: 'gallery',    hue:  75, chroma: 0.090, nick: 'gold' },
+  { name: 'stock',      hue:  95, chroma: 0.125, nick: 'amber' },
   { name: 'iot',        hue: 130, chroma: 0.150, nick: 'lime' },
   { name: 'chzzk-auth', hue: 160, chroma: 0.150, nick: 'spring' },
 ];
