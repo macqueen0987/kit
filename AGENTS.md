@@ -30,7 +30,35 @@
 
 **이것이 스펙 §9.1의 마이그레이션 절차 0단계다.** "`:root` 토큰만 바꾸니 HTML·JS 무변경, 안전하고 눈에 안 띄는 단계"라고 생각하고 `<link>`부터 걸면, 그 순간 헤딩이 작아지고 리스트 마커가 사라지고 링크 밑줄이 없어지는 걸 보고 당황하게 된다 — 원인은 아직 손대지 않은 토큰이 아니라 이 Preflight다. 서비스가 자기 헤딩·리스트 스타일을 이미 갖고 있다면(§0의 레이어 규칙을 따랐을 때) 그 규칙이 나중에 로드되어 이기므로 최종 결과는 바뀌지 않지만, **그 사이 낙차를 스크린샷으로 미리 확인하지 않으면 무엇이 kit 탓이고 무엇이 서비스 CSS 누락 탓인지 구분할 수 없다.** `agent-gate` 파일럿은 자체 전역 리셋을 이미 갖고 있어 이 낙차가 드러나지 않았다 — 다음 대상 `itad`는 `*{box-sizing:border-box}` 하나뿐이라 헤딩·리스트가 브라우저 기본값에 의존하므로, `<link>`를 붙이는 즉시 이 표의 효과를 전부 체감한다.
 
-Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건, 스펙 §3). **`<link>`를 붙이기 전/후로 반드시 강제 새로고침 스크린샷을 남긴다.**
+Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건, 스펙 §3).
+
+### 1.1 실제로 걸린 사례 — 예측 목록을 믿지 말 것
+
+서비스 7개를 옮기며 회귀가 네 번 났다. **공통 원인은 하나뿐인데 걸리는 속성은 매번 달랐다.**
+
+| 서비스 | 걸린 것 | 왜 |
+|---|---|---|
+| `itad` | `h1`/`h2`의 **font-weight** | `font-size`는 정의했지만 굵기는 UA 기본값(bold)에 기댔다. Preflight의 `font-weight:inherit`가 body의 400을 물려줬다 |
+| `profile` | `<hr>`의 **여백과 색** | 리셋이 `div/h1~h6/p/ul/ol/li`만 다루고 `hr`을 빼놨다. `*{margin:0}`이 UA 여백을, `hr{color:inherit}`가 회색을 지웠다 |
+| `chzzk-auth` | `<ul>`의 **리스트 마커** | `padding-left`만 주고 마커는 UA 기본값에 기댔다 |
+| `logflare` | `<img>`의 **display** | 배지가 `<img>` 기본값 `inline`에 기대 가로로 흘렀는데 `display:block`이 되어 세로로 쌓였다 |
+
+**공통 원인: 서비스가 브라우저 기본값에 기대고 아무것도 쓰지 않은 자리.** 어느 속성이냐는 서비스마다 다르고 위 §1 표로는 예측되지 않는다 — 넷 중 셋이 그 표 밖이었다.
+
+그래서 **`<link>`를 붙이기 전/후로 computed style을 대조한다.** 스크린샷 눈대중으로는 셋을 놓쳤을 것이다(font-weight·hr 여백·마커는 작은 화면에서 안 보인다). 방법:
+
+```js
+// before: kit <link> 없는 사본에서 실행해 sessionStorage에 저장
+const P = ['fontSize','fontWeight','lineHeight','marginTop','marginBottom','paddingLeft',
+           'listStyleType','textDecorationLine','backgroundColor','color','display','verticalAlign'];
+const snap = () => [...document.querySelectorAll('body, body *')]
+  .filter(e => !['SCRIPT','STYLE','LINK','META'].includes(e.tagName))
+  .map(e => P.map(p => getComputedStyle(e)[p]).join('~~'));
+sessionStorage.setItem('base', JSON.stringify(snap()));
+// after: kit <link> 붙인 페이지에서 같은 배열을 만들어 인덱스별로 대조한다
+```
+
+`<img>`가 있다면 **부모가 flex/grid인지 확인한다** — flex 자식이면 `display:block`이 되어도 가로로 흐르므로 안전하다(`profile`·`gallery`가 그 경우다). 일반 블록 컨테이너 안의 인라인 이미지만 깨진다.
 
 ## 2. 토큰 (`--color-*`, CSS 변수 겸 유틸리티 접두사)
 
