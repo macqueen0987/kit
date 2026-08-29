@@ -50,6 +50,243 @@
     border-color: var(--color-accent);
   }
 
+  /* .select 의 드롭다운 표시자.
+   *
+   * appearance:none 으로 OS 기본 화살표를 걷어내고 kit 이 직접 그린다 — 그러지
+   * 않으면 같은 화면이 Windows / macOS / Linux 에서 서로 다른 모양의 화살표를
+   * 낸다. padding-right 를 넉넉히 줘서 긴 옵션 텍스트가 화살표를 파고들지 않게 한다.
+   *
+   * **소비 서비스 주의**: `.select` 에 `background: <색>` 단축 속성을 쓰면
+   * background-image 까지 초기화돼 화살표가 사라진다(그리고 appearance:none 은
+   * 남아 있어 네이티브 화살표도 없다 — 표시자가 아예 없는 상태가 된다).
+   * 반드시 `background-color` 를 쓴다. agent-gate·itad 가 실제로 이 함정에
+   * 걸려 있었고 마이그레이션에서 함께 고쳤다.
+   *
+   * 화살표 색이 토큰이 아닌 고정 회색인 이유: background-image 의 SVG 는 별도
+   * 문서라 CSS 변수도 currentColor 도 볼 수 없다. 라이트/다크 양쪽에서 읽히는
+   * 중간 회색으로 고정했다. 토큰을 따라야 한다면 <select> 를 감싸고 래퍼의
+   * 가상요소로 그려야 하는데, 그건 마크업 변경을 요구하므로 하지 않는다. */
+  .select {
+    appearance: none;
+    padding-right: --spacing(8);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23949499' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6.5 8 10.5 12 6.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right --spacing(2.5) center;
+    background-size: --spacing(4) --spacing(4);
+  }
+
+  /* 열린 목록(팝업)까지 kit 이 그린다.
+   *
+   * 위 규칙은 닫힌 상태의 버튼만 바꾼다 — 클릭했을 때 뜨는 목록은 여전히 OS 가
+   * 그리는 네이티브 메뉴라서 배경·글자색·모서리가 kit 과 전혀 다르고, 다크
+   * 화면에서 갑자기 밝은 회색 목록이 튀어나온다. `appearance: base-select` 는
+   * <select> 를 일반 요소처럼 렌더링해 팝업과 option 까지 CSS 로 스타일할 수
+   * 있게 해주는 표준 기능이다(Chromium 135+).
+   *
+   * @supports 로 감싼 이유: 이 기능이 없는 브라우저(현재 Firefox·Safari)는 위의
+   * 화살표만 적용된 상태로 남는다 — 기능이 빠지는 것이지 깨지지 않는다.
+   * JS 로 만든 커스텀 드롭다운을 쓰지 않는 이유이기도 하다. kit 은 CSS 전용
+   * 번들이고, JS 드롭다운은 키보드·스크린리더·폼 제출을 전부 다시 구현해야 한다.
+   * 여기서는 네이티브 <select> 의 접근성을 그대로 두고 겉모습만 가져온다. */
+  @supports (appearance: base-select) {
+    .select,
+    .select::picker(select) {
+      appearance: base-select;
+    }
+
+    .select {
+      /* base 렌더링에서는 ::picker-icon 이 화살표를 그리므로 배경 이미지를
+       * 끈다 — 두지 않으면 화살표가 두 개로 보인다. */
+      background-image: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: --spacing(2);
+      padding-right: --spacing(3);
+      text-align: start;
+    }
+    .select:open {
+      border-color: var(--color-accent);
+    }
+    .select::picker-icon {
+      color: var(--color-dim);
+      transition: rotate 160ms ease, color 160ms;
+    }
+    .select:open::picker-icon {
+      rotate: 180deg;
+      color: var(--color-accent);
+    }
+
+    .select::picker(select) {
+      /* 팝업 패널. 버튼과 같은 표면 계단을 쓰되 한 칸 위로 띄워 그림자로
+       * 분리한다 — 목록이 배경 카드에 파묻히지 않게 한다. */
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--kit-radius);
+      padding: --spacing(1);
+      margin-top: --spacing(1);
+      box-shadow: 0 12px 32px rgb(0 0 0 / 0.45);
+      max-height: 18rem;
+      overflow-y: auto;
+    }
+
+    .select option {
+      display: flex;
+      align-items: center;
+      gap: --spacing(2);
+      padding: --spacing(2) --spacing(2.5);
+      border-radius: var(--radius-xs);
+      font-size: var(--text-sm);
+      color: var(--color-text);
+      background-color: transparent;
+      cursor: pointer;
+    }
+    /* 마우스와 키보드 이동을 같은 모양으로 표시한다. base 렌더링에서 키보드
+     * 이동은 :checked 가 아니라 포커스로 나타나므로 둘 다 잡아야 한다. */
+    .select option:hover,
+    .select option:focus {
+      background-color: var(--color-surface-2);
+      outline: none;
+    }
+    .select option:checked {
+      color: var(--color-accent);
+      font-weight: 500;
+    }
+    /* 선택 표시는 오른쪽 끝으로 민다 — 왼쪽에 두면 옵션 글자들이 들쭉날쭉해진다. */
+    .select option::checkmark {
+      order: 1;
+      margin-left: auto;
+      color: var(--color-accent);
+    }
+    .select option:disabled {
+      color: var(--color-dim);
+      cursor: not-allowed;
+    }
+  }
+
+  /* ── 체크박스 · 라디오 · 토글 ──
+   *
+   * 네이티브 위젯의 색만 바꾸는 것은 base.css 가 accent-color 로 이미 하고 있고,
+   * 클래스가 없어도 전 서비스에 적용된다. 아래는 크기·모양·체크 표시까지
+   * 통제해야 할 때 쓰는 opt-in 이다 — appearance:none 이라 accent-color 는
+   * 더 이상 관여하지 않는다.
+   *
+   * 두 요소 모두 44px 터치 타깃보다 작으므로, 클릭 영역은 .check-row 라벨이
+   * 책임진다(아래). 체크박스만 단독으로 놓지 말고 라벨과 함께 쓴다. */
+  .checkbox, .radio, .switch {
+    appearance: none;
+    flex: none;
+    margin: 0;
+    cursor: pointer;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border-strong);
+    transition: background-color 160ms, border-color 160ms;
+  }
+  .checkbox:focus-visible, .radio:focus-visible, .switch:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .checkbox:disabled, .radio:disabled, .switch:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .checkbox, .radio {
+    /* inline-grid + place-content 로 체크 표시를 가운데 둔다. 가상요소를
+     * absolute 로 띄우지 않으므로 부모의 position 에 의존하지 않는다. */
+    display: inline-grid;
+    place-content: center;
+    width: --spacing(4.5);
+    height: --spacing(4.5);
+  }
+  .checkbox { border-radius: var(--radius-xs); }
+  .radio { border-radius: 100px; }
+
+  .checkbox::before, .radio::before {
+    content: "";
+    transform: scale(0);
+    transition: transform 120ms ease-out;
+  }
+  /* 회전한 두 변으로 체크 표시를 그린다 — 이미지도 폰트도 쓰지 않아
+   * --color-on-accent 를 그대로 따라간다. */
+  .checkbox::before {
+    width: --spacing(1.5);
+    height: --spacing(2.5);
+    margin-top: -2px;
+    border: 2px solid var(--color-on-accent);
+    border-top-width: 0;
+    border-left-width: 0;
+  }
+  .radio::before {
+    width: --spacing(2);
+    height: --spacing(2);
+    border-radius: 100px;
+    background-color: var(--color-on-accent);
+  }
+  .checkbox:checked, .radio:checked,
+  .checkbox:indeterminate {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .checkbox:checked::before { transform: rotate(45deg) scale(1); }
+  .radio:checked::before { transform: scale(1); }
+  /* 부분 선택(전체 선택 체크박스 등)은 가로 막대로 표시한다. */
+  .checkbox:indeterminate::before {
+    width: --spacing(2.5);
+    height: 2px;
+    margin-top: 0;
+    border: 0;
+    background-color: var(--color-on-accent);
+    transform: scale(1);
+  }
+
+  .switch {
+    position: relative;
+    width: --spacing(9);
+    height: --spacing(5);
+    border-radius: 100px;
+    background-color: var(--color-border-strong);
+    border-color: transparent;
+  }
+  .switch::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: --spacing(4);
+    height: --spacing(4);
+    border-radius: 100px;
+    background-color: var(--color-text);
+    transition: transform 160ms ease-out, background-color 160ms;
+  }
+  .switch:checked {
+    background-color: var(--color-accent);
+    border-color: transparent;
+  }
+  .switch:checked::before {
+    transform: translateX(--spacing(4));
+    background-color: var(--color-on-accent);
+  }
+
+  /* ── 폼 배치 ──
+   * 라벨과 컨트롤을 묶는 두 가지 최소 형태. 서비스마다 매번 다시 적던 것이다. */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: --spacing(1.5);
+    font-size: var(--text-sm);
+  }
+  /* 체크박스·라디오 한 줄. min-height 로 44px 터치 타깃을 라벨이 확보한다 —
+   * 컨트롤 자체는 18px 라 단독으로는 모바일에서 누르기 어렵다. */
+  .check-row {
+    display: flex;
+    align-items: center;
+    gap: --spacing(2);
+    min-height: --spacing(11);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+
   .badge {
     display: inline-block;
     padding: --spacing(0.5) --spacing(2);

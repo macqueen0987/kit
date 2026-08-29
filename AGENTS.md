@@ -110,10 +110,14 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 .input  .select  .textarea
 .alert  .alert-{ok,warn,danger}
 .badge  .badge-{accent,ok,warn,danger}
+.checkbox  .radio  .switch
+.field  .check-row
 .table
 .empty
 .pagination
 ```
+
+**이름이 겹치면 조용히 혼종이 된다.** 위 이름은 일부러 일반적이라 서비스가 이미 같은 이름을 쓰고 있을 수 있다(실제로 `agent-gate`·`itad`·`chzzk-auth`·`novel` 5개 서비스에서 11건 겹친다). 서비스 CSS는 레이어 밖이라 **자기가 정의한 속성만** 이기고, 정의하지 않은 속성은 kit이 채운다 — `itad`의 `.btn`은 `display`를 안 정해 kit의 `inline-flex`를, `.badge`는 `font-weight`를 안 정해 kit의 `500`을 물려받았다. 겹치는 목록은 `known-class-collisions.json`에 있고 `pnpm test`가 **새로 생긴 겹침만** 실패시킨다(`node scripts/check-class-collisions.mjs`로 현황을 본다). 서비스 규칙에서 속성을 지울 때 kit 값이 드러난다는 점을 기억한다.
 
 **베이스 클래스만 붙이고 모디파이어를 빠뜨리면 조용히 반쪽짜리가 렌더된다** — 에러도 안 나고 §0의 조용한 실패와 겉보기 증상이 비슷하다.
 
@@ -126,11 +130,35 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 
 `.btn`/`.card`/`.input`,`.select`,`.textarea`/`.alert`는 내부적으로 공개 토큰 `--radius`가 아니라 프라이빗 토큰 `--kit-radius`(값은 동일하게 `0.625rem`)를 쓴다. 소비 서비스가 자기 `:root`에서 `--radius`를 재정의해도(예: `itad`) 이 컴포넌트들의 모양은 바뀌지 않는다 — 예전에는 바뀌었고, 빠져나갈 방법이 없었다(§9.1의 2번 항목이 원래 경고하던 문제). `--radius` 자체는 여전히 공개 토큰으로 남아 있고, Tailwind가 직접 생성하는 유틸리티 클래스(`rounded`, `rounded-lg` 등)는 계속 `--radius`/`--radius-*`를 참조한다 — 그건 소비자가 자기 페이지의 `rounded` 계열을 바꿀 수 있어야 하는 의도된 동작이므로 그대로 둔다.
 
+### 4.2 폼 컨트롤 — 두 층으로 되어 있다
+
+**1층: 클래스를 붙이지 않아도 적용된다** (`@layer base`, 마크업 변경 0)
+
+| 대상 | 효과 |
+|---|---|
+| `input[type=checkbox]`, `input[type=radio]` | `accent-color`가 서비스 accent를 따른다 |
+| `input[type=number]` | 위아래 스피너가 사라진다. `min`/`max`/`step` 검증과 키보드 화살표는 그대로다 |
+
+서비스가 되돌리고 싶으면 자기 CSS에서 그냥 덮으면 된다 — `:where()`로 감싸 명시도가 0이다.
+
+**2층: 모양까지 통제할 때 쓰는 opt-in 클래스**
+
+| 클래스 | 쓰는 곳 |
+|---|---|
+| `.checkbox` `.radio` | `appearance:none` 기반. 18px, 체크 표시·점은 `--color-on-accent`. `:indeterminate`는 가로 막대로 표시된다 |
+| `.switch` | 36×20 토글. `<input type="checkbox" class="switch">` 로 쓴다 |
+| `.check-row` | 컨트롤+라벨 한 줄. **44px 터치 타깃을 라벨이 확보한다** — 컨트롤 자체는 18px라 단독으로는 모바일에서 누르기 어렵다 |
+| `.field` | 라벨 위, 컨트롤 아래의 세로 묶음 |
+
+`.checkbox`/`.radio`/`.switch`는 `appearance:none`이라 1층의 `accent-color`가 더 이상 관여하지 않는다 — 둘을 섞어 쓰면 색이 어긋나지 않고 그냥 2층이 이긴다.
+
+**`.select`는 열린 목록까지 kit이 그린다.** `appearance: base-select`(Chromium 135+)로 팝업·`option`·선택 표시를 CSS로 스타일한다. 지원하지 않는 브라우저(현재 Firefox·Safari)는 닫힌 버튼의 화살표만 적용된 채 네이티브 목록이 뜬다 — 기능이 빠지는 것이지 깨지지 않는다. **서비스는 `.select`에 `background`·`padding` 단축 속성을 쓰면 안 된다** — 화살표(`background-image`)와 화살표 자리(`padding-right`)가 함께 지워져 표시자가 아예 없는 셀렉트가 된다. `background-color`, `padding-block`/`padding-left`를 쓴다. `agent-gate`·`itad` 둘 다 이 함정에 걸려 있었다.
+
 ## 5. kit에 없는 것 (만들지 않는다, 대체 방법을 쓴다)
 
 | 없는 것 | 상태 | 대체 |
 |---|---|---|
-| checkbox / radio / toggle 컴포넌트, `accent-*` 유틸리티 | **완전히 없다.** kit의 가장 확실한 반복 구멍 | 서비스 CSS에 최소 규칙만 남긴다: `input[type=checkbox]{accent-color:var(--accent)}` 등. 새로 만들지 않는다 — 이 문서 갱신 시점에는 아직 계획에 없다 |
+| ~~checkbox / radio / toggle~~ | **해소됨** — §4.2를 본다 | — |
 | 정확한 px 단위 (`max-w-[560px]`, `text-[15px]`) | 원리적으로 불가 (§2) | 가장 가까운 스케일 값으로 근사하거나 서비스 CSS에서 `var(--color-*)`/직접 값 사용 |
 
 ## 6. 라이트 테마

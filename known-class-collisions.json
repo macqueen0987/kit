@@ -1,0 +1,44 @@
+{
+  "alert": [
+    "chzzk-auth",
+    "novel"
+  ],
+  "badge": [
+    "agent-gate",
+    "chzzk-auth",
+    "itad",
+    "novel"
+  ],
+  "badge-ok": [
+    "chzzk-auth"
+  ],
+  "badge-warn": [
+    "chzzk-auth"
+  ],
+  "btn": [
+    "agent-gate",
+    "chzzk-auth",
+    "itad"
+  ],
+  "btn-primary": [
+    "agent-gate",
+    "chzzk-auth"
+  ],
+  "check-row": [
+    "agent-gate"
+  ],
+  "empty": [
+    "novel"
+  ],
+  "input": [
+    "agent-gate",
+    "itad"
+  ],
+  "select": [
+    "agent-gate",
+    "itad"
+  ],
+  "textarea": [
+    "agent-gate"
+  ]
+}

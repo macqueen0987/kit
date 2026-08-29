@@ -1,0 +1,56 @@
+/* kit 의 base 레이어 추가분.
+ *
+ * Tailwind Preflight 도 @layer base 에 들어가고, 이 파일은 app.css 에서
+ * `@import "tailwindcss"` 보다 뒤에 import 되므로 같은 레이어 안에서 소스 순서상
+ * 나중이라 Preflight 를 덮는다. 반대로 소비 서비스가 자기 리셋을 @layer base 로
+ * 감싸고 kit 보다 뒤에 로드하면 서비스 쪽이 이긴다 — 의도한 순서다.
+ *
+ * 여기 넣는 기준: **클래스를 붙이지 않아도 전 서비스에 적용되어야 하는 것**만.
+ * 클래스로 opt-in 하는 것은 components.css 로 간다. 레이어 base 는 서비스가
+ * 가장 쉽게 덮을 수 있는 층이라, 서비스가 원하면 언제든 되돌릴 수 있는 것만
+ * 여기 둔다. */
+
+@layer base {
+  /* 체크박스·라디오가 서비스 accent 색을 따른다.
+   *
+   * 클래스 없이 적용되는 이유: 설정 화면이 있는 서비스라면 어디서나 체크박스가
+   * 나오는데, kit 에 대응이 없어 서비스마다 `accent-color: var(--accent)` 한 줄을
+   * 반복해 적고 있었다(agent-gate `.check-row input` 이 실례다). 파일럿 리포트가
+   * "가장 확실하게 반복될 구멍"으로 지목한 항목이다. accent-color 는 네이티브
+   * 위젯의 강조색만 바꾸고 크기·모양·접근성은 브라우저에 그대로 맡기므로,
+   * 마크업을 하나도 건드리지 않고 12개 서비스가 같은 색을 쓰게 하는 가장 값싼
+   * 방법이다.
+   *
+   * 모양까지 통제해야 하면 components.css 의 .checkbox / .radio / .switch 를
+   * 쓴다 — 그쪽은 appearance:none 이라 이 규칙의 영향을 받지 않는다.
+   *
+   * :where() 로 감싸 명시도를 0 으로 만든다. 서비스가 `input[type=checkbox]`
+   * 같은 평범한 셀렉터로 덮으려 할 때 명시도 싸움이 나지 않게 한다 — 레이어
+   * 규칙만으로도 서비스가 이기지만, 서비스가 자기 CSS 를 @layer base 로 감싼
+   * 경우(마이그레이션 1단계를 따르면 그렇게 된다)에는 같은 레이어 안에서
+   * 명시도가 다시 유효해지기 때문이다. */
+  :where(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--color-accent);
+  }
+
+  /* 숫자 입력의 위아래 스피너를 없앤다.
+   *
+   * 브라우저가 그리는 이 화살표는 크기·색·위치를 CSS 로 통제할 수 없어서 어떤
+   * 입력 스타일과도 겉돌고, 폭이 좁은 필드에서는 값 위에 겹친다. 실제 입력은
+   * 키보드와 붙여넣기로 이뤄지고 스피너로 값을 맞추는 경우는 거의 없다.
+   * min/max/step 은 그대로 살아 있어 검증과 키보드 화살표 조작은 유지된다.
+   *
+   * -webkit- 접두 가상요소와 appearance:textfield 를 함께 둔다 — 전자는
+   * Chromium/WebKit, 후자는 Firefox 용이다. 둘 중 하나만으로는 한쪽에 남는다.
+   *
+   * base 레이어에 두는 이유는 accent-color 와 같다 — 마크업을 건드리지 않고
+   * 전 서비스에 같은 결과를 주되, 서비스가 되돌리고 싶으면 쉽게 덮을 수 있다. */
+  :where(input[type="number"]) {
+    appearance: textfield;
+  }
+  :where(input[type="number"])::-webkit-outer-spin-button,
+  :where(input[type="number"])::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+}

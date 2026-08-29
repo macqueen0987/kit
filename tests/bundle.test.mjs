@@ -123,7 +123,61 @@ test('컴포넌트 클래스가 생성된다', () => {
                      '.input', '.select', '.textarea',
                      '.badge', '.badge-accent', '.badge-ok', '.badge-warn', '.badge-danger',
                      '.alert', '.alert-ok', '.alert-warn', '.alert-danger',
-                     '.empty', '.pagination', '.table']);
+                     '.empty', '.pagination', '.table',
+                     '.checkbox', '.radio', '.switch', '.field', '.check-row']);
+});
+
+test('체크박스·라디오가 클래스 없이도 서비스 accent 를 쓴다 (base 레이어)', () => {
+  // 스펙 §12 의 최우선 후속 작업. 설정 화면이 있는 서비스마다 반복해 적던
+  // `accent-color: var(--accent)` 한 줄을 kit 이 대신 진다 — 마크업 변경 0.
+  assert.match(
+    css,
+    /:where\(input\[type=checkbox\],input\[type=radio\]\)\{accent-color:var\(--color-accent\)\}/,
+    'base 레이어의 accent-color 규칙이 없다',
+  );
+  // Preflight 뒤, components 앞에 있어야 한다. 앞서면 Preflight 가 덮고,
+  // components 안에 들어가면 서비스가 덮기 어려워진다.
+  const iPreflight = css.indexOf('h1,h2,h3,h4,h5,h6');
+  const iAccent = css.indexOf('accent-color:var(--color-accent)');
+  const iComponents = css.indexOf('@layer components');
+  assert.ok(iPreflight > 0 && iAccent > iPreflight, 'accent-color 가 Preflight 보다 앞에 있다 — 덮인다');
+  assert.ok(iAccent < iComponents, 'accent-color 가 base 레이어 밖으로 나갔다');
+});
+
+test('.select 가 자체 드롭다운 표시자를 그린다', () => {
+  // appearance:none 만 있고 화살표가 없으면 표시자가 아예 사라진다 — 둘은
+  // 반드시 함께 있어야 한다. 소비 서비스가 background 단축 속성으로 이
+  // background-image 를 지우는 것이 실제로 겪은 함정이라 존재를 고정해 둔다.
+  const rule = css.slice(css.indexOf('.select{'), css.indexOf('.select{') + 700);
+  assert.ok(css.includes('.select{'), '.select 규칙이 없다');
+  assert.match(rule, /appearance:none/, '.select 에 appearance:none 이 없다');
+  assert.match(rule, /background-image:url\("data:image\/svg\+xml/, '.select 화살표 SVG 가 없다');
+});
+
+test('체크 표시와 토글 손잡이가 on-accent 색을 쓴다', () => {
+  // accent 배경 위에 놓이므로 --color-on-accent 여야 대비가 보장된다
+  // (kit 테스트가 12개 서비스 accent 전부에서 AA 를 검증하는 짝이다).
+  // 흰색이나 고정 색을 쓰면 밝은 accent(L 0.78)에서 조용히 대비가 무너진다.
+  for (const sel of ['.checkbox:checked', '.radio:checked', '.switch:checked']) {
+    assert.ok(css.includes(sel), `${sel} 규칙이 없다`);
+  }
+  // 미니파이어가 ::before 를 :before 로 줄이므로 콜론 개수를 고정하지 않는다.
+  const before = (sel) => new RegExp(`\\.${sel}::?before\\{[^}]*`);
+  assert.ok(
+    !new RegExp(`${before('checkbox').source}#fff`).test(css) &&
+    !new RegExp(`${before('radio').source}#fff`).test(css),
+    '체크 표시가 고정 흰색을 쓴다 — --color-on-accent 를 쓸 것',
+  );
+  assert.match(
+    css,
+    new RegExp(`${before('radio').source}var\\(--color-on-accent\\)`),
+    '라디오 점이 on-accent 를 안 쓴다',
+  );
+  assert.match(
+    css,
+    new RegExp(`${before('checkbox').source}var\\(--color-on-accent\\)`),
+    '체크 표시가 on-accent 를 안 쓴다',
+  );
 });
 
 test('파일럿 리뷰에서 발견된 공백이 메워졌다', () => {
