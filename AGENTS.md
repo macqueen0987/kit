@@ -44,7 +44,7 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 | `dim` | 0.560 0.012 285 | **라벨·비활성 전용. 본문에 쓰지 않는다** (AA 미보장, AA-Large만) |
 | `accent` | 0.780 0.130 185(서비스별 hue 다름) | 강조. 서비스가 `--color-accent` 재정의 가능 |
 | `on-accent` | 0.160 0.010 285 | accent 배경 위 텍스트 |
-| `success` / `warning` / `danger` | — | 의미색. bg 위 3:1 이상 보장 |
+| `success` / `warning` / `danger` / `info` | — | 의미색. bg 위 3:1 이상 보장(라이트에서는 AA). `info`는 2026-08-29 승격 — `agent-gate`(`.badge.safe`)와 `novel`이 각자 만들어 쓰고 있었다 |
 
 표면 계단은 `bg < surface < surface-2 < border < border-strong` 순으로 L값이 단조 증가한다 — 구분이 필요하면 이 순서를 따라 올라간다.
 

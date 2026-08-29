@@ -61,6 +61,7 @@
     --color-success: oklch(0.520 0.140 150);
     --color-warning: oklch(0.535 0.115 85);
     --color-danger: oklch(0.510 0.190 25);
+    --color-info: oklch(0.510 0.150 240);
 
     /* accent 는 서비스가 고른 hue/chroma 를 유지한 채 L 만 낮춘다. */
     --color-accent: oklch(from var(--kit-accent) 0.520 c h);
@@ -91,6 +92,7 @@
       --color-success: oklch(0.520 0.140 150);
       --color-warning: oklch(0.535 0.115 85);
       --color-danger: oklch(0.510 0.190 25);
+    --color-info: oklch(0.510 0.150 240);
 
       --color-accent: oklch(from var(--kit-accent) 0.520 c h);
       --color-on-accent: oklch(0.980 0.004 285);

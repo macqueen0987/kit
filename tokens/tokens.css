@@ -26,6 +26,11 @@
   --color-success:   oklch(0.800 0.160 150);
   --color-warning:   oklch(0.830 0.140 85);
   --color-danger:    oklch(0.700 0.170 25);
+  /* 정보/안내. success·warning·danger 와 함께 표준 의미색 네 개를 완성한다.
+   * agent-gate 가 .badge.safe 에, novel 이 안내 표시에 각자 같은 것을 만들어
+   * 쓰고 있었다 — 파일럿 리포트가 "반복 사례가 하나 더 쌓이면 승격을 판단한다"고
+   * 남긴 조건이 채워졌다. 값은 agent-gate 가 실제로 쓰며 검증된 것을 그대로 쓴다. */
+  --color-info:      oklch(0.740 0.130 240);
 
   /* accent 위에 얹는 텍스트 */
   --color-on-accent: oklch(0.160 0.010 285);

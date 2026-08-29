@@ -39,7 +39,7 @@ const accentL = (() => {
 
 test('라이트 팔레트에 필요한 토큰이 모두 있다', () => {
   for (const n of ['bg', 'surface', 'surface-2', 'border', 'border-strong',
-                   'text', 'muted', 'dim', 'success', 'warning', 'danger', 'on-accent']) {
+                   'text', 'muted', 'dim', 'success', 'warning', 'danger', 'info', 'on-accent']) {
     assert.ok(t.has(n), `라이트 토큰 누락: --color-${n}`);
   }
 });
@@ -78,7 +78,7 @@ test('라이트: 의미색이 bg 위에서 본문 AA', () => {
   // 다크 쪽 게이트는 3:1(아이콘·테두리 기준)이지만, 라이트에서는 본문 색으로
   // 쓰는 경우가 더 흔해 AA 로 더 엄하게 잡는다. 실측 여유는 최소 0.4 정도다.
   const fails = [];
-  for (const c of ['success', 'warning', 'danger']) {
+  for (const c of ['success', 'warning', 'danger', 'info']) {
     const r = contrastRatio(t.get(c), t.get('bg'));
     if (r < 4.5) fails.push(`${c}: ${r.toFixed(2)}:1`);
   }

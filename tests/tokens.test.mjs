@@ -11,7 +11,7 @@ test('스펙 §5의 색 토큰이 모두 존재한다', () => {
   const required = [
     'bg', 'surface', 'surface-2', 'border', 'border-strong',
     'text', 'muted', 'dim',
-    'accent', 'success', 'warning', 'danger', 'on-accent',
+    'accent', 'success', 'warning', 'danger', 'info', 'on-accent',
   ];
   for (const name of required) {
     assert.ok(t.has(name), `토큰 누락: --color-${name}`);
