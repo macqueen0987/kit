@@ -50,7 +50,7 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 
 표면 계단은 `bg < surface < surface-2 < border < border-strong` 순으로 L값이 단조 증가한다 — 구분이 필요하면 이 순서를 따라 올라간다.
 
-**규칙: `bg-accent` 위의 텍스트는 반드시 `text-on-accent`를 쓴다.** `text-text`(1.72:1)를 포함해 다른 어떤 텍스트 토큰도 `bg-accent` 위에서 AA를 보장하지 않는다 — accent는 서비스별로 hue가 바뀌는 토큰이라(§7) 조합을 눈으로 검증하기 어렵고, `bg-accent`와 `text-text`가 둘 다 safelist에 있어 이 조합 자체를 막는 장치가 safelist 수준에는 없다. `on-accent`만 12개 서비스 accent 전부에서 AA 통과가 테스트로 보장돼 있다(`tests/tokens.test.mjs`).
+**규칙: `bg-accent` 위의 텍스트는 반드시 `text-on-accent`를 쓴다.** `text-text`(1.72:1)를 포함해 다른 어떤 텍스트 토큰도 `bg-accent` 위에서 AA를 보장하지 않는다 — accent는 서비스별로 hue가 바뀌는 토큰이라(§7) 조합을 눈으로 검증하기 어렵고, `bg-accent`와 `text-text`가 둘 다 safelist에 있어 이 조합 자체를 막는 장치가 safelist 수준에는 없다. `on-accent`만 모든 서비스 accent에서 AA 통과가 테스트로 보장돼 있다(`tests/tokens.test.mjs`).
 
 **금지: Tailwind 기본 팔레트 전체** (`bg-red-500`, `text-gray-400`, `bg-zinc-900` 등). 번들에 없다 — 색이 필요하면 항상 위 토큰 중 하나를 쓴다. 서비스마다 자기 빨강을 고르는 것을 막기 위한 정책 결정이다(스펙 §3).
 
@@ -205,4 +205,4 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 
 ## 7. 서비스별 accent
 
-`<html style="--color-accent: oklch(0.780 0.130 <hue>)">` 한 줄로 재정의한다. L=0.780 고정, hue만 서비스마다 다르다 — 값은 `docs/2026-08-28-kit-design.md` §5.2 표를 따른다(12개 서비스, `novel` 포함). `on-accent`(텍스트)는 재정의하지 않는다 — 모든 서비스 accent 위에서 AA 통과가 이미 테스트로 보장돼 있다. accent 위에 텍스트를 올릴 때는 §2의 규칙대로 `text-on-accent`만 쓴다.
+`<style>:root{--kit-accent:oklch(0.780 0.130 <hue>)}</style>` 한 줄로 주입한다(Jinja 서비스는 `kit.head(accent=...)` 매크로가 처리한다). **`--color-accent`가 아니라 `--kit-accent`다** — 이유는 §6.1. L=0.780 고정, hue만 서비스마다 다르다 — 값은 `docs/2026-08-28-kit-design.md` §5.2 표를 따른다. `on-accent`(텍스트)는 재정의하지 않는다 — 모든 서비스 accent 위에서 AA 통과가 이미 테스트로 보장돼 있다. accent 위에 텍스트를 올릴 때는 §2의 규칙대로 `text-on-accent`만 쓴다.

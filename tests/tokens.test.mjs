@@ -61,8 +61,9 @@ test('on-accent는 모든 서비스 accent 위에서 AA를 통과한다', () => 
   assert.deepEqual(failures, [], `accent 위 텍스트 대비 미달: ${failures.join(', ')}`);
 });
 
-test('서비스 accent는 12개이고 hue가 서로 20도 이상 떨어져 있다', () => {
-  assert.equal(SERVICE_ACCENTS.length, 12);
+test('서비스 accent는 11개이고 hue가 서로 20도 이상 떨어져 있다', () => {
+  // mpw 가 폐기되면서 12개에서 11개가 됐다(스펙 §2.1). hue 305 는 비어 있다.
+  assert.equal(SERVICE_ACCENTS.length, 11);
   const hues = SERVICE_ACCENTS.map((s) => s.hue).sort((a, b) => a - b);
   for (let i = 1; i < hues.length; i++) {
     assert.ok(hues[i] - hues[i - 1] >= 20,

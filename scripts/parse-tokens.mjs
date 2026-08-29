@@ -22,7 +22,7 @@ export const SERVICE_ACCENTS = [
   { name: 'logflare',   hue: 240, chroma: 0.135, nick: 'blue' },
   { name: 'COLLARS',    hue: 265, chroma: 0.130, nick: 'indigo' },
   { name: 'profile',    hue: 285, chroma: 0.115, nick: 'violet' },
-  { name: 'mpw',        hue: 305, chroma: 0.130, nick: 'purple' },
+  // hue 305(purple)는 비어 있다 — mpw 가 폐기되면서 반납됐다(스펙 §2.1).
   { name: 'novel',      hue:  20, chroma: 0.140, nick: 'rose' },
   { name: 'itad',       hue:  55, chroma: 0.150, nick: 'orange' },
   // gallery 는 원래 330(magenta)이었다. 사진 갤러리라 강조색이 사진과 경쟁하면

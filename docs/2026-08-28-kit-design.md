@@ -1,7 +1,7 @@
 # kit 공용 디자인 시스템 설계
 
 - 작성일: 2026-08-28
-- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 12개
+- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 **11개** (`mpw` 폐기로 12개에서 줄었다 — §2.1)
 - 상태: **1~3단계 구현 완료** (§9 참조). `agent-gate` 파일럿 결과는 `docs/2026-08-28-pilot-report.md` 참조. 전체 브랜치 리뷰 fix wave 완료 — 상세는 `.superpowers/sdd/2026-08-28-kit-plan/task-7-report.md`의 "Final review fix wave" 절 참조
 
 ## 1. 목표
@@ -28,14 +28,31 @@
 | `itad` | `:root` CSS 변수, 다크, orange accent. 두 번째로 가깝다 |
 | `profile` | 구식 네이밍(`--header-background-color`), Inter + Noto Sans KR |
 | `gallery` | 화면별 CSS 파일 분리(`board.css`, `home.css`, …) |
-| `mpw` | Tailwind 빌드 존재(`tailwind-build/input.css`) |
 | `stock` | Vite 앱(`web/`), 컴포넌트별 CSS |
 | `COLLARS` | pnpm 모노레포, React, BlockNote 등 외부 UI 포함 |
 | `logflare` `iot` `aitg` `chzzk-auth` `novel` | 각자 개별 CSS |
 
 `agent-gate`와 `itad`가 이미 `--bg / --surface / --text / --muted / --accent / --success / --warning / --danger / --border / --radius`라는 사실상 동일한 이름 체계를 쓰고 있다. **새로 만드는 게 아니라 이미 수렴한 것을 계약으로 확정하는 작업이다.**
 
-`profile`의 CSS가 `projects/mpw/nginx/html/profile/`에 복사되어 있다. 마이그레이션 시 함께 제거한다.
+~~`profile`의 CSS가 `projects/mpw/nginx/html/profile/`에 복사되어 있다.~~ **해소됨(2026-08-29)** — `profile` 마이그레이션에서 서비스 쪽 죽은 사본 `html/`을 지웠고, `projects/mpw`는 폐기됐다(§2.1).
+
+### 2.1 `mpw`는 대상에서 빠졌다 (2026-08-29)
+
+**`mpw`는 폐기된 모놀리스였다.** "My Personal Web" — 프로필·dulgibro 갤러리·stock을 한 FastAPI 프로세스에 묶어 돌리던 컨테이너인데, 세 서브앱이 전부 독립 서비스로 이관된 뒤 껍데기만 남아 있었다.
+
+| `mpw` 안에서 | 지금 |
+|---|---|
+| `/` 프로필 | `services/profile` |
+| `/dulgibro` 갤러리 | `services/gallery` (`dulgibro.pics` 서빙) |
+| `/i` stock | `services/stock` (`stock-api`) |
+
+조사 결과: 컨테이너 없음(중지된 것조차), edge Caddyfile에 라우팅 없음, 마지막 커밋 2026-05-19. 워크스페이스 재편 문서(2026-08-27)가 이미 **"멈춤"** 으로 분류해 뒀다. 미커밋 78건 중 54건이 삭제였는데 그게 바로 두 서브앱을 걷어내던 해체 작업이었고, 커밋되지 않은 채 3개월 떠 있었다.
+
+이 문서가 `mpw`를 대상으로 잡은 근거(§2의 "Tailwind 빌드 존재 `tailwind-build/input.css`")도 실제로는 `app/internal/stock/` 것이었다 — 지금은 `services/stock` 소관이다.
+
+**그래서 `mpw`를 §2 현황, §5.2 accent 표, §9 마이그레이션 순서에서 모두 제거했다.** 대상은 12개에서 **11개**가 되고 hue 305(purple)는 비었다 — 새 서비스가 생기면 쓸 수 있다.
+
+`projects/mpw`와 `archive/mpw-dup`은 2026-08-29에 폐기했다(합계 270MB). 폐기 전에 로컬에만 있던 미푸시 7커밋(dulgibro 갤러리 최초 구현)을 원격에 밀어 이력을 보존했다 — https://github.com/macqueen0987/personal-web. 크롬 확장 `toss-getter`만 `archive/mpw-toss-getter/`로 건졌고, 미커밋 해체 작업도 패치로 함께 남겼다.
 
 **최종 리뷰 문서 정정 — `novel` 누락.** 이전 판은 위 표에서 `novel`을 빠뜨린 채 "소비 서비스 11개"로 적었는데, §5.2 accent 표와 `scripts/parse-tokens.mjs`의 `SERVICE_ACCENTS`(테스트로 12개가 고정돼 있다)는 이미 처음부터 `novel`을 포함한 12개였다 — 표·서술과 실제 코드가 어긋나 있었다. `novel`을 위 표와 §9 마이그레이션 순서에 추가해 12개로 맞춘다. `novel`이 §1 비목표에서 제외한 것은 안드로이드 앱뿐, 웹 서비스(`novel.code0987.me`, `novel-app-1`)는 원래부터 대상이었다.
 
@@ -166,7 +183,6 @@ L을 0.780으로 고정하고 hue만 돌린다. 그래서 어느 서비스를 �
 | `logflare` | 240 | 0.135 | blue |
 | `COLLARS` | 265 | 0.130 | indigo |
 | `profile` | 285 | 0.115 | violet |
-| `mpw` | 305 | 0.130 | purple |
 | `gallery` | 75 | 0.090 | gold (원래 330 magenta — §5.3) |
 | `novel` | 20 | 0.140 | rose |
 | `itad` | 55 | 0.150 | orange |
@@ -328,15 +344,15 @@ services/kit 에서
 2. `agent-gate` 파일럿 — 토큰 구조가 가장 가깝고 내부용이라 깨져도 영향이 적다. safelist 구멍이 여기서 드러난다
 3. **중단하고 safelist 재점검** — 파일럿 결과를 반영한다. 완료(`docs/2026-08-28-pilot-report.md`)
 4. `itad` — `head()` / `header()` 매크로 최초 구현·실전 검증
-5. `profile` — 가장 오래된 CSS. `projects/mpw/nginx/html/profile/` 중복을 함께 제거한다
-6. `gallery` → `logflare` → `iot` → `mpw` → `aitg` → `chzzk-auth` → `novel`
+5. `profile` — 가장 오래된 CSS. 서비스 안의 죽은 사본 `html/`을 함께 제거한다
+6. `gallery` → `logflare` → `iot` → `aitg` → `chzzk-auth` → `novel`
 7. `stock/web` → `COLLARS` — React. COLLARS는 BlockNote 등 외부 UI와 얽혀 가장 복잡하므로 마지막
 
 각 단계는 독립 커밋으로 되돌릴 수 있어야 한다.
 
-**첫 구현 계획의 범위는 1~3단계까지였고, 완료됐다.** 4단계 이후는 파일럿에서 나온 safelist 수정과 매크로 API 변경을 반영한 뒤 별도 계획으로 쪼갠다. 12개 서비스 마이그레이션을 하나의 계획에 담으면 앞단의 학습이 뒷단에 반영되지 않는다.
+**첫 구현 계획의 범위는 1~3단계까지였고, 완료됐다.** 4단계 이후는 파일럿에서 나온 safelist 수정과 매크로 API 변경을 반영한 뒤 별도 계획으로 쪼갠다. 전 서비스 마이그레이션을 하나의 계획에 담으면 앞단의 학습이 뒷단에 반영되지 않는다.
 
-**최종 리뷰 문서 정정 — `novel`이 6단계에 빠져 있었다.** §5.2 accent 표와 `SERVICE_ACCENTS`(테스트로 12개 고정)는 처음부터 `novel`(hue 20, rose)을 포함했는데, 이 마이그레이션 순서와 §2 현황 표에서만 누락돼 "12개 accent인데 11개 서비스"라는 어긋남이 있었다. `novel`을 6단계 끝에 추가해 12개로 맞췄다 — 순서상 `chzzk-auth` 다음, `stock/web`·`COLLARS`(React, 7단계) 이전에 둔 것은 `novel`도 나머지 6단계 서비스처럼 빌드 파이프라인이 없는 서비스이기 때문이다. 이로써 §7의 "Jinja 서비스 9개"(`itad`·`profile`·`gallery`·`logflare`·`iot`·`mpw`·`aitg`·`chzzk-auth`·`novel`)도 실제로 9개가 맞아떨어진다 — 이전 판은 8개만 나열해놓고 9개라고 적어 여기서도 어긋나 있었다.
+**최종 리뷰 문서 정정 — `novel`이 6단계에 빠져 있었다.** §5.2 accent 표와 `SERVICE_ACCENTS`(테스트로 12개 고정)는 처음부터 `novel`(hue 20, rose)을 포함했는데, 이 마이그레이션 순서와 §2 현황 표에서만 누락돼 "12개 accent인데 11개 서비스"라는 어긋남이 있었다. `novel`을 6단계 끝에 추가해 12개로 맞췄다 — 순서상 `chzzk-auth` 다음, `stock/web`·`COLLARS`(React, 7단계) 이전에 둔 것은 `novel`도 나머지 6단계 서비스처럼 빌드 파이프라인이 없는 서비스이기 때문이다. 이로써 §7의 "Jinja 서비스" 목록도 실제 개수와 맞아떨어진다 — 이전 판은 8개만 나열해놓고 9개라고 적어 여기서도 어긋나 있었다. (`mpw`가 빠지면서 지금은 8개다 — §2.1.)
 
 ### 9.1 표준 마이그레이션 절차
 
