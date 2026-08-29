@@ -8,7 +8,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { definedClasses, usedClasses } from '../scripts/check-classes.mjs';
+import { definedClasses, usedClasses, checkService } from '../scripts/check-classes.mjs';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 test('마크업: 이름 일부가 Jinja 로 만들어지면 클래스로 세지 않는다', () => {
   // `st-{{ c.status }}` 는 런타임에 st-done / st-waiting 같은 이름이 된다.
@@ -50,4 +53,24 @@ test('CSS: Tailwind 이스케이프를 풀어 마크업 이름과 맞춘다', ()
   const d = definedClasses('.md\\:gap-2\\.5{gap:10px}.w-1\\/2{width:50%}');
   assert.ok(d.has('md:gap-2.5'), `이스케이프를 못 풀었다: ${[...d]}`);
   assert.ok(d.has('w-1/2'), `분수 클래스를 못 풀었다: ${[...d]}`);
+});
+
+test('마크업 안의 <style> 블록도 정의로 센다', () => {
+  // 별도 CSS 파일 없이 인라인 <style> 하나가 전부인 서비스가 있다(logflare).
+  // 이걸 빼면 그 페이지의 모든 클래스가 "정의되지 않음"으로 잡혀 보고가
+  // 통째로 쓸모없어진다 — 실제로 그렇게 오탐이 났다.
+  const dir = mkdtempSync(join(tmpdir(), 'kit-lint-'));
+  try {
+    writeFileSync(
+      join(dir, 'index.html'),
+      '<style>.inline-only{color:red}</style><div class="inline-only nowhere"></div>',
+      'utf8',
+    );
+    const r = checkService(dir);
+    const names = r.undefined.map((u) => u.cls);
+    assert.ok(!names.includes('inline-only'), '인라인 <style> 의 정의를 놓쳤다');
+    assert.ok(names.includes('nowhere'), '진짜 미정의 클래스를 놓쳤다');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
