@@ -27,6 +27,9 @@
 @import "tailwindcss" source(none);
 @import "../../tokens/tokens.css";
 @import "./safelist.css";
+/* themes.css 는 tokens.css 뒤에 와야 한다 — @layer theme 안에서 소스 순서상
+ * 나중이라야 라이트 테마가 기본(다크) 토큰을 덮는다. */
+@import "./themes.css";
 /* base.css 는 tailwindcss 뒤에 와야 한다 — 같은 @layer base 안에서 소스 순서상
  * 나중이라야 Preflight 를 덮는다. */
 @import "./base.css";

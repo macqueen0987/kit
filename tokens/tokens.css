@@ -15,8 +15,14 @@
   --color-muted: oklch(0.720 0.012 285);
   --color-dim:   oklch(0.560 0.012 285);
 
+  /* 서비스가 고르는 accent 씨앗. 서비스는 이 이름을 주입한다 —
+   * --color-accent 는 kit 이 테마(다크/라이트)에 맞춰 밝기를 조정해 내보내는
+   * 값이라 서비스가 직접 덮으면 라이트 테마에서 되돌아간다. 자세한 이유는
+   * bundle/src/themes.css 머리말 참고. 기본값은 agent-gate 의 teal 이다. */
+  --kit-accent:      oklch(0.780 0.130 185);
+
   /* 의미색 */
-  --color-accent:    oklch(0.780 0.130 185);
+  --color-accent:    var(--kit-accent);
   --color-success:   oklch(0.800 0.160 150);
   --color-warning:   oklch(0.830 0.140 85);
   --color-danger:    oklch(0.700 0.170 25);

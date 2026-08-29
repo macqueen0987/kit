@@ -1,0 +1,99 @@
+/* kit 라이트 테마.
+ *
+ * ── 기본은 다크다 ──────────────────────────────────────────────────────────
+ * `data-theme` 속성이 없으면 다크다. **`prefers-color-scheme` 을 기본으로
+ * 따르지 않는다.** 이미 마이그레이션한 서비스들은 자기 CSS 에 다크를 전제한
+ * 값을 갖고 있고(chzzk-auth 의 파란 배경 그라데이션, profile 의 그라데이션
+ * 배너처럼 레이어 밖 하드코딩), 그것들은 kit 토큰을 따라오지 않는다. kit 이
+ * 시스템 설정만 보고 라이트로 뒤집으면 그 서비스들이 예고 없이 깨진다.
+ * 라이트는 서비스가 명시적으로 켜는 것이다.
+ *
+ * ── 세 가지 상태 ───────────────────────────────────────────────────────────
+ *   (속성 없음)          다크. 지금까지의 모든 서비스가 여기 해당한다.
+ *   data-theme="light"   라이트 고정.
+ *   data-theme="dark"    다크 고정(기본과 같지만, 토글 UI 가 세 상태를 다룰 때 필요).
+ *   data-theme="auto"    시스템 설정을 따른다. 라이트 모드에서만 아래 media 블록이 적용된다.
+ *
+ * ── accent 는 테마마다 밝기가 달라야 한다 ──────────────────────────────────
+ * 서비스 accent 는 다크에서 L 0.78 이다. 그 값을 라이트 배경에 그대로 쓰면
+ * 링크 글자가 흰 바탕 위 밝은 색이 되어 대비가 무너진다. 그래서 라이트에서는
+ * 같은 hue/chroma 를 유지한 채 L 만 0.52 로 낮춘다(상대 색 문법).
+ *
+ * 이 때문에 **서비스는 --color-accent 가 아니라 --kit-accent 를 주입한다.**
+ * --color-accent 는 kit 이 테마에 맞춰 계산해 내보내는 값이고, --kit-accent 가
+ * 서비스가 고르는 씨앗이다. 서비스가 --color-accent 를 직접 덮으면 다크에서는
+ * 동작하지만 라이트에서 kit 기본 accent 로 되돌아간다.
+ *
+ * ── 왜 light-dark() 를 쓰지 않았나 ─────────────────────────────────────────
+ * light-dark() 면 토큰마다 한 줄로 끝나지만, 지원하지 않는 브라우저에서는 그
+ * 선언이 통째로 무효가 되어 토큰이 사라진다 — 색이 조금 이상해지는 게 아니라
+ * 페이지가 무너진다. kit 은 공개 서비스(profile)도 서빙하므로 중복을 감수하고
+ * 명시적으로 두 벌 적는다.
+ *
+ * 값의 근거: 다크 팔레트와 같은 게이트를 통과시켰다 — text/muted 는 세 표면
+ * 위에서 본문 AA, dim 은 큰 텍스트 3:1, 의미색은 bg 위 AA, on-accent 는 12개
+ * 서비스 accent 전부에서 AA. tests/tokens.test.mjs 가 이를 고정한다. */
+
+@layer theme {
+  /* 다크(기본)에서도 color-scheme 을 선언한다 — 스크롤바·폼 컨트롤·자동완성
+   * 팝업 같은 브라우저 UI 가 페이지와 같은 밝기를 쓰게 한다. */
+  :root {
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+
+    /* 표면 — 다크와 반대로 bg 가 가장 밝고 계단이 내려간다. */
+    --color-bg: oklch(0.985 0.002 285);
+    --color-surface: oklch(0.965 0.003 285);
+    --color-surface-2: oklch(0.935 0.004 285);
+    --color-border: oklch(0.880 0.006 285);
+    --color-border-strong: oklch(0.780 0.008 285);
+
+    /* 텍스트 */
+    --color-text: oklch(0.220 0.008 285);
+    --color-muted: oklch(0.450 0.010 285);
+    --color-dim: oklch(0.580 0.010 285);
+
+    /* 의미색 — 밝은 바탕에서 읽히도록 L 을 크게 낮췄다. 다크의 L 0.80 대를
+     * 그대로 쓰면 흰 바탕에서 3:1 도 못 넘는다. */
+    --color-success: oklch(0.520 0.140 150);
+    --color-warning: oklch(0.535 0.115 85);
+    --color-danger: oklch(0.510 0.190 25);
+
+    /* accent 는 서비스가 고른 hue/chroma 를 유지한 채 L 만 낮춘다. */
+    --color-accent: oklch(from var(--kit-accent) 0.520 c h);
+    /* accent 가 어두워졌으므로 그 위 글자는 밝아야 한다. */
+    --color-on-accent: oklch(0.980 0.004 285);
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  :root[data-theme="auto"] {
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root[data-theme="auto"] {
+      --color-bg: oklch(0.985 0.002 285);
+      --color-surface: oklch(0.965 0.003 285);
+      --color-surface-2: oklch(0.935 0.004 285);
+      --color-border: oklch(0.880 0.006 285);
+      --color-border-strong: oklch(0.780 0.008 285);
+
+      --color-text: oklch(0.220 0.008 285);
+      --color-muted: oklch(0.450 0.010 285);
+      --color-dim: oklch(0.580 0.010 285);
+
+      --color-success: oklch(0.520 0.140 150);
+      --color-warning: oklch(0.535 0.115 85);
+      --color-danger: oklch(0.510 0.190 25);
+
+      --color-accent: oklch(from var(--kit-accent) 0.520 c h);
+      --color-on-accent: oklch(0.980 0.004 285);
+    }
+  }
+}

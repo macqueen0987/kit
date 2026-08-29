@@ -30,6 +30,12 @@
   매크로는 <head> 안에서만 실행되므로 <html> 속성을 만들 수 없다 — 우선순위
   결과는 같다.
 
+  주입하는 이름이 --color-accent 가 아니라 --kit-accent 인 것에 주의한다.
+  --color-accent 는 kit 이 테마(다크/라이트)에 맞춰 밝기를 조정해 내보내는
+  값이고, --kit-accent 가 서비스가 고르는 씨앗이다. --color-accent 를 직접
+  덮으면 다크에서는 동작하지만 라이트 테마에서 그 값이 그대로 쓰여 밝은 바탕
+  위 밝은 글자가 된다. 자세한 근거는 kit 의 bundle/src/themes.css 머리말 참고.
+
   이 매크로가 CDN URL 을 유일하게 아는 곳이다. v2 로 옮기거나 도메인이 바뀌면
   이 파일만 고치고 sync 를 돌린다.
 -#}
@@ -38,6 +44,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://kit.code0987.me/v1/app.css">
 {%- if accent %}
-<style>:root{--color-accent:{{ accent }}}</style>
+<style>:root{--kit-accent:{{ accent }}}</style>
 {%- endif %}
 {%- endmacro -%}
