@@ -138,8 +138,9 @@ Preflight는 kit에서 뺄 수 없다(Tailwind v4를 쓰는 이상 전제조건,
 |---|---|
 | `input[type=checkbox]`, `input[type=radio]` | `accent-color`가 서비스 accent를 따른다 |
 | `input[type=number]` | 위아래 스피너가 사라진다. `min`/`max`/`step` 검증과 키보드 화살표는 그대로다 |
+| `textarea` | 오른쪽 아래 크기 조절 손잡이가 사라진다(`resize:none`). 높이는 `rows`나 CSS로 정한다. 내용에 맞춰 늘리려면 서비스에서 `field-sizing: content`를 켠다 |
 
-서비스가 되돌리고 싶으면 자기 CSS에서 그냥 덮으면 된다 — `:where()`로 감싸 명시도가 0이다.
+서비스가 되돌리고 싶으면 자기 CSS에서 그냥 덮으면 된다 — 앞의 두 규칙은 `:where()`로 감싸 명시도가 0이고, 서비스 CSS는 어차피 레이어 밖이라 항상 이긴다. **`textarea`만 `:where()` 없이 쓴다** — Preflight가 같은 레이어에서 `textarea{resize:vertical}`로 이 속성을 명시적으로 켜기 때문에, 같은 레이어 안에서 소스 순서보다 먼저 비교되는 명시도에서 0으로는 이길 수 없다. 반대로 서비스가 `.textarea{resize:vertical}` 같은 규칙을 남겨두면 그 서비스에만 손잡이가 계속 보인다(`agent-gate`가 실제로 그랬다).
 
 **2층: 모양까지 통제할 때 쓰는 opt-in 클래스**
 

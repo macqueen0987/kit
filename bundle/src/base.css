@@ -53,4 +53,28 @@
     appearance: none;
     margin: 0;
   }
+
+  /* textarea 오른쪽 아래의 크기 조절 손잡이를 없앤다.
+   *
+   * Tailwind Preflight 가 textarea{resize:vertical} 로 켜 두는데, 이 손잡이는
+   * 브라우저가 그리는 빗금이라 색도 모양도 CSS 로 통제할 수 없다. 어두운 화면
+   * 위에서 특히 도드라지고, 테두리 radius 안쪽에서 모서리를 뚫고 나온 것처럼
+   * 보인다. 사용자가 늘려 놓은 높이는 저장되지도 않는다.
+   *
+   * 대신 높이는 서비스가 rows 속성이나 CSS 로 정한다. 내용에 맞춰 자동으로
+   * 늘어나게 하려면 서비스에서 `field-sizing: content` 를 켠다 — 여기서 켜지
+   * 않는 이유는 레이아웃이 입력 중에 움직이는 것이 모든 화면에서 바람직하진
+   * 않아서다.
+   *
+   * 위 두 규칙과 달리 :where() 로 감싸지 않는다. Preflight 가 같은 레이어에서
+   * `textarea{resize:vertical}` 로 이 속성을 **명시적으로 켜기 때문**이다 —
+   * 같은 레이어 안에서는 소스 순서보다 명시도가 먼저라, :where() 의 명시도 0
+   * 으로는 Preflight 의 (0,0,1) 을 못 이긴다(실제로 그렇게 만들었다가 손잡이가
+   * 그대로 남는 것을 확인했다). accent-color 와 스피너는 Preflight 가 건드리지
+   * 않는 속성이라 :where() 로도 충분했다. 서비스가 되돌리려면 자기 CSS 에서
+   * textarea 또는 더 구체적인 셀렉터로 resize 를 다시 지정하면 된다 — 서비스
+   * CSS 는 레이어 밖이거나 나중에 로드되므로 여전히 이긴다. */
+  textarea {
+    resize: none;
+  }
 }
