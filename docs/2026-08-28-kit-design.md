@@ -1,7 +1,7 @@
 # kit 공용 디자인 시스템 설계
 
 - 작성일: 2026-08-28
-- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 **10개** (`mpw` 폐기·`aitg` 웹 표면 없음으로 12개에서 줄었다 — §2.1)
+- 대상: `E:\Workspace\services\kit` (신규), 소비 서비스 **9개** (`mpw`·`aitg`·`iot`가 빠져 12개에서 줄었다 — §2.1)
 - 상태: **1~3단계 구현 완료** (§9 참조). `agent-gate` 파일럿 결과는 `docs/2026-08-28-pilot-report.md` 참조. 전체 브랜치 리뷰 fix wave 완료 — 상세는 `.superpowers/sdd/2026-08-28-kit-plan/task-7-report.md`의 "Final review fix wave" 절 참조
 
 ## 1. 목표
@@ -30,7 +30,7 @@
 | `gallery` | 화면별 CSS 파일 분리(`board.css`, `home.css`, …) |
 | `stock` | Vite 앱(`web/`), 컴포넌트별 CSS |
 | `COLLARS` | pnpm 모노레포, React, BlockNote 등 외부 UI 포함 |
-| `logflare` `iot` `chzzk-auth` `novel` | 각자 개별 CSS (`aitg`는 웹 표면이 없어 빠졌다 — §2.1) |
+| `logflare` `chzzk-auth` `novel` | 각자 개별 CSS (`aitg`·`iot`는 빠졌다 — §2.1) |
 
 `agent-gate`와 `itad`가 이미 `--bg / --surface / --text / --muted / --accent / --success / --warning / --danger / --border / --radius`라는 사실상 동일한 이름 체계를 쓰고 있다. **새로 만드는 게 아니라 이미 수렴한 것을 계약으로 확정하는 작업이다.**
 
@@ -63,6 +63,18 @@
 디자인 시스템이 관여할 표면 자체가 없으므로 §9 마이그레이션 순서에서 뺀다. accent hue 215(azure)는 그대로 둔다 — 나중에 관리 UI가 생기면 그때 쓴다. 폐기된 `mpw`(hue 305 반납)와 다른 점이다.
 
 대상은 **10개**가 된다.
+
+#### `iot` — 배포돼 있지 않다
+
+`projects/iot`는 ESP32 스케치(`arduino/esp32heater`, 파일 3개)와 홈 IoT 서버(`homeserver`, FastAPI + nginx)로 되어 있다. 서버 쪽에 HTML 8개와 CSS 354줄이 있어 표면은 존재한다.
+
+문제는 **돌지 않는다**는 것이다. 컨테이너 없음, edge Caddyfile 라우팅 없음, 마지막 커밋 2025-01-03(총 4커밋). 그 커밋 메시지가 "실제로 동작하는 첫번째 버전 … 기본적인 기능은 다 구현됨"이고, 그 뒤로 미커밋 11건이 19개월째 떠 있다. `docker-compose.yml`의 FastAPI 이미지 줄은 주석 처리돼 있다.
+
+마이그레이션해도 **아무도 보지 않고, 브라우저로 검증할 수도 없다** — 이 계획이 매 서비스에서 회귀를 잡아낸 방법이 라이브 화면의 computed style 대조였는데 그걸 쓸 수 없다. 그래서 뺀다.
+
+`mpw`와는 성격이 다르다. `mpw`는 내용이 세 서비스로 이관 완료된 뒤 껍데기만 남아 폐기가 명확했지만, `iot`는 이관된 것이 아니라 **그냥 중단된 프로젝트**다. 대체물이 없으므로 폐기하지 않고 그대로 둔다. accent hue 130(lime)도 `aitg`와 같이 **반납하지 않는다** — 다시 띄우는 날 그대로 쓴다.
+
+대상은 **9개**가 된다.
 
 **최종 리뷰 문서 정정 — `novel` 누락.** 이전 판은 위 표에서 `novel`을 빠뜨린 채 "소비 서비스 11개"로 적었는데, §5.2 accent 표와 `scripts/parse-tokens.mjs`의 `SERVICE_ACCENTS`(테스트로 12개가 고정돼 있다)는 이미 처음부터 `novel`을 포함한 12개였다 — 표·서술과 실제 코드가 어긋나 있었다. `novel`을 위 표와 §9 마이그레이션 순서에 추가해 12개로 맞춘다. `novel`이 §1 비목표에서 제외한 것은 안드로이드 앱뿐, 웹 서비스(`novel.code0987.me`, `novel-app-1`)는 원래부터 대상이었다.
 
@@ -355,7 +367,7 @@ services/kit 에서
 3. **중단하고 safelist 재점검** — 파일럿 결과를 반영한다. 완료(`docs/2026-08-28-pilot-report.md`)
 4. `itad` — `head()` / `header()` 매크로 최초 구현·실전 검증
 5. `profile` — 가장 오래된 CSS. 서비스 안의 죽은 사본 `html/`을 함께 제거한다
-6. `gallery` → `logflare` → `iot` → `chzzk-auth` → `novel`
+6. `gallery` → `logflare` → `chzzk-auth` → `novel`
 7. `stock/web` → `COLLARS` — React. COLLARS는 BlockNote 등 외부 UI와 얽혀 가장 복잡하므로 마지막
 
 각 단계는 독립 커밋으로 되돌릴 수 있어야 한다.
