@@ -14,6 +14,10 @@
     {
       "service": "profile",
       "path": "../profile/templates/_kit.html"
+    },
+    {
+      "service": "novel",
+      "path": "../novel/src/novel_translator/templates/_kit.html"
     }
   ],
   "pending": [
@@ -39,10 +43,6 @@
     },
     {
       "service": "chzzk-auth",
-      "note": "스펙 §9-6"
-    },
-    {
-      "service": "novel",
       "note": "스펙 §9-6"
     }
   ]
