@@ -20,7 +20,21 @@ export const SERVICE_ACCENTS = [
   { name: 'agent-gate', hue: 185, chroma: 0.130, nick: 'teal' },
   { name: 'aitg',       hue: 215, chroma: 0.125, nick: 'azure' },
   { name: 'logflare',   hue: 240, chroma: 0.135, nick: 'blue' },
-  { name: 'COLLARS',    hue: 265, chroma: 0.130, nick: 'indigo' },
+  // hue 265(indigo)는 비어 있다 — `COLLARS` 가 이 표에서 빠지면서 반납됐다.
+  //
+  // COLLARS 는 **kit 의 소비자가 아니다.** stock 처럼 accent 만 자기 것을 쓰는
+  // 게 아니라 팔레트 체계 전체를 kit 밖에 갖고 있다. 실측:
+  //   kit 클래스 정확 일치 0건 / var() 466개 중 kit 이름 0개
+  //   (--mantine-* 383, --collars-* 82) / 인라인 style 666곳
+  // 팔레트는 Mantine 이 TS 테마(createAppMantineTheme)에서 **생성**하는
+  // --mantine-color-* 라 갈아끼울 :root 블록 자체가 없고, Mantine 은 색당
+  // 10단계 튜플을 요구하는데 kit 은 단일 accent + 중립 8단계만 준다.
+  // 브랜드 색(forest #004d40 -> teal #00838f -> gold #b28704)은 랜딩 히어로
+  // 아트워크에 묶여 있어 기계적으로 대체할 수도 없다.
+  //
+  // 배정값 indigo(265)는 실제와 어긋나 있었다 — 진짜 primary 는 teal
+  // oklch(0.557 0.095 206)로 배정에서 58.9도 떨어져 있고, 그 자체로 aitg(215)와
+  // 8.9도라 20도 규칙을 통과하지도 못한다. 표에 남겨둘 근거가 없다.
   { name: 'profile',    hue: 285, chroma: 0.115, nick: 'violet' },
   // hue 305(purple)는 비어 있다 — mpw 가 폐기되면서 반납됐다(스펙 §2.1).
   { name: 'novel',      hue:  20, chroma: 0.140, nick: 'rose' },

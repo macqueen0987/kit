@@ -259,4 +259,6 @@ sessionStorage.setItem('base', JSON.stringify(snap()));
 
 `<style>:root{--kit-accent:oklch(0.780 0.130 <hue>)}</style>` 한 줄로 주입한다(Jinja 서비스는 `kit.head(accent=...)` 매크로가 처리한다). **`--color-accent`가 아니라 `--kit-accent`다** — 이유는 §6.1. L=0.780 고정, hue만 서비스마다 다르다 — 값은 `docs/2026-08-28-kit-design.md` §5.2 표를 따른다. `on-accent`(텍스트)는 재정의하지 않는다 — 모든 서비스 accent 위에서 AA 통과가 이미 테스트로 보장돼 있다. accent 위에 텍스트를 올릴 때는 §2의 규칙대로 `text-on-accent`만 쓴다.
 
+**표에 없는 서비스가 셋 있다.** `COLLARS` 는 아예 kit 의 소비자가 아니다 — Mantine 7 이 팔레트·라이트/다크·컴포넌트를 전부 갖고 있고 kit 클래스도 kit 토큰 이름도 참조가 0건이다(스펙 §7.2). `mpw` 는 폐기됐다. 나머지 하나는 아래 `stock/web` 이다.
+
 **모든 소비자가 kit 에서 accent 를 받는 것은 아니다.** `stock/web` 은 자기 accent(Toss 파생 블루 `#3182f6`)를 유지하고 kit 에서는 중립 표면과 타이포만 가져간다 — 그 앱에서 파랑은 장식이 아니라 의미이기 때문이다(`--color-negative`=하락이 accent 와 같은 색이고, 한국 증시 관례로 빨강이 상승·파랑이 하락이다). 그래서 `SERVICE_ACCENTS` 표에서 빠져 있고 hue 20도 규칙의 대상도 아니다. **이 규칙은 kit 이 색을 배정하는 서비스에만 적용된다.** 자기 accent 를 유지하는 소비자는 `--kit-accent` 를 주입하지 않고, 자기 `:root` 에서 `--color-accent` 를 직접 정의한다(다크 전용 앱이라 §6.1 의 라이트 대비 문제가 없다).

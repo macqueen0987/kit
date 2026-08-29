@@ -203,7 +203,6 @@ L을 0.780으로 고정하고 hue만 돌린다. 그래서 어느 서비스를 �
 | `agent-gate` | 185 | 0.130 | teal (기본값) |
 | `aitg` | 215 | 0.125 | azure |
 | `logflare` | 240 | 0.135 | blue |
-| `COLLARS` | 265 | 0.130 | indigo |
 | `profile` | 285 | 0.115 | violet |
 | `gallery` | 75 | 0.090 | gold (원래 330 magenta — §5.3) |
 | `novel` | 20 | 0.140 | rose |
@@ -235,6 +234,16 @@ hue 75는 `itad`(55)에서 정확히 20도, `iot`(130)에서 55도 떨어져 "�
 이것은 §7.3의 토큰 전용 진입점과 짝을 이루는 판단이다 — `stock`은 kit에서 중립 표면과 타이포만 가져가고 accent·의미색·폰트·radius는 자기 것을 유지한다.
 
 이 변경은 **마이그레이션 대상 서비스가 kit의 배정보다 더 나은 근거를 갖고 있을 때 kit 쪽을 고친다**는 선례다. 반대로 `profile`은 자기 팔레트를 kit에 맞춰 전면 교체했다 — 그쪽은 서비스에 색을 고른 근거가 없었기 때문이다.
+
+### 5.3.2 `COLLARS`도 표에서 빠졌다 (2026-08-29)
+
+표는 10개에서 **9개**가 됐다. 비는 hue는 95(amber), 265(indigo), 305(purple), 330(magenta) 넷이다.
+
+`stock`은 accent만 자기 것을 썼지만 `COLLARS`는 **팔레트 체계 전체가 kit 밖에 있다.** 실측은 §7.2에 있다 — kit 클래스 정확 일치 0건, `var()` 466개 중 kit 이름 0개.
+
+배정값 indigo(265)는 실제와 어긋나 있었다. 진짜 primary는 teal `oklch(0.557 0.095 206)`로 배정에서 **58.9도** 떨어져 있고, 그 자체로 `aitg`(215)와 **8.9도**라 20도 규칙을 통과하지도 못한다. 표에 남겨둘 근거가 없다.
+
+**두 사례에서 같은 것이 드러났다.** §5.2의 accent 표는 마이그레이션을 시작하기 전에 만들어졌고, 실제 서비스를 열어보지 않은 항목이 섞여 있었다. `gallery`(330→75), `stock`(95→제외), `COLLARS`(265→제외) 셋 다 같은 이유로 고쳐졌다 — **배정이 관찰보다 먼저 있었다.** 남은 9개 중 실제로 kit이 색을 배정해 적용한 것은 마이그레이션을 마친 서비스들이고, 아직 적용되지 않은 `aitg`(215)·`iot`(130)는 그 서비스를 실제로 열어볼 때 같은 검토를 거쳐야 한다.
 
 ### 5.4 라이트 테마 (2026-08-29 추가, §1 비목표 철회)
 
@@ -310,8 +319,7 @@ brotli 압축 후 **7.0KB**(파일럿 gap-fill 기준), 최종 리뷰의 C1 폰�
 
 ```
 tokens/tokens.css ──┬─→ bundle/dist/app.css    → <link> → Jinja 서비스 8개
-                    ├─→ bundle/dist/tokens.css → <link> → stock/web (§7.3)
-                    └─→ react/preset.js        → import → COLLARS (미구현)
+                    └─→ bundle/dist/tokens.css → <link> → stock/web (§7.3)
 ```
 
 ### 7.1 빌드 없는 서비스 (Jinja 8개)
@@ -326,15 +334,36 @@ tokens/tokens.css ──┬─→ bundle/dist/app.css    → <link> → Jinja �
 
 매크로: `head()` `header()` `nav()` `button()` `badge()` `alert()` `empty_state()` `pagination()`
 
-### 7.2 빌드 있는 앱 (COLLARS)
+### 7.2 React preset은 만들지 않는다 (2026-08-29 폐기)
 
-`@code0987/kit`을 git 태그로 참조한다. preset으로 정상 Tailwind 빌드를 하므로 safelist 제약을 받지 않고 purge가 정확하다.
+이전 판의 이 절은 "빌드 있는 앱(COLLARS, stock/web)에 `@code0987/kit` preset을 쓴다"였다. **두 후보가 모두 사라져 소비자가 0이 됐다.** `react/`는 미구현 상태로 남고, 그대로 둔다.
 
-React 컴포넌트는 `Button` `Card` `Input` `Badge` `EmptyState` `Alert` 6개로 시작한다. 미리 만들어두면 안 쓰이는 컴포넌트를 유지보수하게 된다.
+- **`stock/web`은 React가 아니었다.** `.tsx` 0개, Tailwind 설정 없음, 순수 TypeScript + Vite다. preset은 Tailwind 빌드를 전제하므로 줄 것이 없다. 실제 경로는 §7.3이 됐다.
+- **`COLLARS`는 React지만 kit의 소비자가 아니다.** 아래 표가 근거다.
 
-**이 앱은 즉시 전파에 묶지 않는다.** 토큰 하나 고칠 때마다 빌드가 깨질 위험을 떠안을 이유가 없다. 원할 때 태그를 올린다.
+| 재는 것 | `COLLARS` |
+|---|---|
+| kit 클래스 정확 일치 | **0건** |
+| `var()` 참조 466개 중 kit 이름 | **0개** (`--mantine-*` 383, `--collars-*` 82) |
+| 인라인 `style={{}}` | 666곳 |
+| 리터럴 `className` | 33곳 (28종, 전부 `collars-*`/`bn-*`/`editor-*`) |
+| 스타일 기반 | Mantine 7 + BlockNote(Mantine variant) |
 
-**정정 (2026-08-29)** — 이전 판은 이 절의 제목이 "COLLARS, stock/web"이었고 둘 다 React라고 적었다. **`stock/web`은 React가 아니다** — `.tsx` 0개, Tailwind 설정 없음, 순수 TypeScript + Vite다. preset은 Tailwind 빌드를 전제하므로 그 앱에는 줄 것이 없다. 실제 경로는 §7.3이다. `react/`는 아직 미구현이고 남은 후보 소비자는 `COLLARS` 하나뿐이므로, 만들기 전에 그 앱이 실제로 kit 클래스를 쓸 것인지부터 확인해야 한다(§7.3의 판단 규칙).
+`stock`은 자기 `:root` 팔레트가 있어 kit으로 갈아끼울 대상이 있었지만, `COLLARS`는 팔레트를 Mantine이 TS 테마(`createAppMantineTheme`)에서 **생성**하는 `--mantine-color-*`로 갖는다 — 갈아끼울 `:root` 블록 자체가 없다. 게다가 **Mantine은 색당 10단계 튜플을 요구하는데 kit은 단일 accent와 중립 8단계만 준다.** 구조가 맞지 않는다.
+
+kit이 줄 수 있다고 생각했던 것들이 이미 그 앱에 더 완성된 형태로 있다.
+
+| kit이 주는 것 | `COLLARS`가 이미 가진 것 |
+|---|---|
+| 중립 표면 8단계 | Mantine `gray`/`dark` 10단계 |
+| 라이트 테마(`data-theme` 4상태) | `defaultColorScheme="auto"` + `cssVariablesResolver` + 사용자 설정 UI |
+| 컴포넌트 클래스 | Mantine 컴포넌트 |
+| 단일 accent | 손으로 맞춘 10단계 브랜드 튜플 |
+| `--font-sans` | 이미 Noto Sans KR |
+
+브랜드 색(forest `#004d40` → teal `#00838f` → gold `#b28704`)은 랜딩 히어로 아트워크에 묶여 있어 기계적으로 대체할 수도 없다 — `collarsTealPalette`의 주석이 "aligned with landing"이라고 명시한다.
+
+**여기서 배운 것**: "빌드가 있는가"는 통합 방식을 정하는 기준이 아니었다. 실제 기준은 **소비자가 자기 디자인 시스템을 갖고 있는가**다. §7.3의 판단 규칙(kit 클래스를 정확 일치로 세기)이 그것을 재는 방법이고, 두 앱 모두 0이 나왔다.
 
 ### 7.3 자기 컴포넌트 체계가 있는 앱 — 토큰 전용 진입점 (2026-08-29 신설)
 
@@ -419,6 +448,15 @@ services/kit 에서
 
 **첫 구현 계획의 범위는 1~3단계까지였고, 완료됐다.** 4단계 이후는 파일럿에서 나온 safelist 수정과 매크로 API 변경을 반영한 뒤 별도 계획으로 쪼갠다. 전 서비스 마이그레이션을 하나의 계획에 담으면 앞단의 학습이 뒷단에 반영되지 않는다.
 
+**완료 (2026-08-29).** 위 순서는 그대로 지켰지만 7단계가 계획과 다르게 끝났다 — 두 앱 모두 `<link>`를 걸지 않았다.
+
+| | 결과 |
+|---|---|
+| 완료 9 | `agent-gate` `itad` `profile` `chzzk-auth` `gallery` `novel` `logflare` `stock/web` + kit 자체 |
+| 제외 4 | `mpw`(폐기) `aitg`(웹 표면 없음) `iot`(배포 안 됨) `COLLARS`(자체 시스템 — §7.2) |
+
+7단계의 전제였던 "React니까 preset"은 두 앱 모두에서 틀렸다. `stock/web`은 React가 아니었고(§7.3), `COLLARS`는 React지만 kit이 줄 것이 없었다(§7.2). **통합 방식을 가르는 기준은 빌드 파이프라인의 유무가 아니라 소비자가 자기 디자인 시스템을 갖고 있는지였다.**
+
 **최종 리뷰 문서 정정 — `novel`이 6단계에 빠져 있었다.** §5.2 accent 표와 `SERVICE_ACCENTS`(테스트로 12개 고정)는 처음부터 `novel`(hue 20, rose)을 포함했는데, 이 마이그레이션 순서와 §2 현황 표에서만 누락돼 "12개 accent인데 11개 서비스"라는 어긋남이 있었다. `novel`을 6단계 끝에 추가해 12개로 맞췄다 — 순서상 `chzzk-auth` 다음, `stock/web`·`COLLARS`(React, 7단계) 이전에 둔 것은 `novel`도 나머지 6단계 서비스처럼 빌드 파이프라인이 없는 서비스이기 때문이다. 이로써 §7의 "Jinja 서비스" 목록도 실제 개수와 맞아떨어진다 — 이전 판은 8개만 나열해놓고 9개라고 적어 여기서도 어긋나 있었다. (`mpw`가 빠지면서 지금은 8개다 — §2.1.)
 
 ### 9.1 표준 마이그레이션 절차
@@ -427,7 +465,7 @@ services/kit 에서
 
 **최종 리뷰 C3 — 0단계(암묵적이지만 결코 무해하지 않다): kit의 `<link>`를 건다.** 아래 3번을 "`:root` 토큰만 교체하므로 HTML·JS 무변경, 즉 안전하고 눈에 띄지 않는 단계"라고 읽으면 안 된다 — 그보다 먼저, `<link>`를 붙이는 순간 kit이 번들에 포함한 **Tailwind Preflight 전체**가 페이지에 들어온다(§11.4 참조). Preflight는 `*{margin:0;padding:0;border:0 solid}`, `h1`~`h6`의 크기·굵기를 `inherit`로 리셋, `ol,ul,menu{list-style:none}`, `img,svg,video{display:block}`, `a{text-decoration:inherit}` 등 브라우저 기본 스타일을 광범위하게 지운다. `agent-gate` 파일럿은 원래 자체 전역 리셋을 갖고 있어 이 낙차가 드러나지 않았지만, 다음 마이그레이션 대상인 `itad`는 `src/dashboard/static/style.css`에 `*{box-sizing:border-box}` 하나뿐이고 템플릿의 헤딩·리스트가 전부 브라우저 기본값에 의존한다 — `<link>`만 붙여도 헤딩이 본문 크기로 줄고, 리스트 마커가 사라지고, 이미지 여백이 바뀌고, 링크 밑줄이 없어진다. Preflight는 제거하지 않는다 — kit이 Tailwind v4 기반인 이상 전제조건이고, 서비스가 자기 헤딩·리스트 스타일을 이미 갖고 있다면 그 규칙이 (1번을 따랐을 때) 어차피 나중에 로드돼 이긴다. `<link>`를 붙이기 전후로 반드시 강제 새로고침 스크린샷을 남겨 이 낙차를 미리 예상한다.
 
-1. **서비스 CSS의 전역 리셋·범용 규칙을 `@layer base`로 감싼다 — 감싸는 대상은 리셋뿐, 서비스 스타일시트 전체가 아니다.** kit 번들은 Tailwind v4라 모든 규칙이 `@layer` 안에 있는 반면, 소비 서비스 10개(React 빌드를 쓰는 `COLLARS`·`stock/web` 제외)는 전부 레이어 없는(unlayered) 평범한 CSS다. CSS Cascading Layers 명세상 레이어 없는 일반 선언은 명시도·소스 순서와 무관하게 레이어 안의 어떤 선언보다 항상 이긴다 — 즉 `*,*::before,*::after{margin:0;padding:0}` 같은 흔한 리셋 하나가 kit의 모든 `@layer components`/`@layer utilities` 클래스를 그 속성에 한해 통째로 무력화한다(§11.1 참조). 리셋을 kit과 같은 이름의 `@layer base`로 감싸면, kit의 `<link>`가 먼저 로드되는 한 같은 레이어 안에서 소스 순서가 다시 유효해져 서비스 쪽 리셋이 계속 이기면서도 kit의 컴포넌트·유틸리티가 정상 동작한다. **경계를 지킨다(최종 리뷰 I4)**: `.btn`/`.card`/`.input` 같은 서비스 고유 오버라이드 규칙은 `@layer`로 감싸지 않고 레이어 없이 그대로 둔다. 서비스 스타일시트 전체를 통째로 `@layer base`로 감싸버리면 그 오버라이드들도 함께 레이어 안에 들어가 버려, kit의 `@layer components`가 명시도와 무관하게 오히려 서비스를 이기기 시작한다 — 정확히 §11.1이 경고하는 우선순위 역전이 이번엔 서비스 쪽에서 일어난다. `@layer base { ... }`는 전역 리셋·범용 UA 재정의 블록만 좁게 감싸고, 서비스가 kit을 의도적으로 오버라이드하는 규칙은 밖에 남긴다.
+1. **서비스 CSS의 전역 리셋·범용 규칙을 `@layer base`로 감싼다 — 감싸는 대상은 리셋뿐, 서비스 스타일시트 전체가 아니다.** kit 번들은 Tailwind v4라 모든 규칙이 `@layer` 안에 있는 반면, 마이그레이션한 서비스 8개(`stock/web`은 토큰만 쓰므로 §7.3, `COLLARS`는 대상이 아니므로 §7.2 제외)는 전부 레이어 없는(unlayered) 평범한 CSS다. CSS Cascading Layers 명세상 레이어 없는 일반 선언은 명시도·소스 순서와 무관하게 레이어 안의 어떤 선언보다 항상 이긴다 — 즉 `*,*::before,*::after{margin:0;padding:0}` 같은 흔한 리셋 하나가 kit의 모든 `@layer components`/`@layer utilities` 클래스를 그 속성에 한해 통째로 무력화한다(§11.1 참조). 리셋을 kit과 같은 이름의 `@layer base`로 감싸면, kit의 `<link>`가 먼저 로드되는 한 같은 레이어 안에서 소스 순서가 다시 유효해져 서비스 쪽 리셋이 계속 이기면서도 kit의 컴포넌트·유틸리티가 정상 동작한다. **경계를 지킨다(최종 리뷰 I4)**: `.btn`/`.card`/`.input` 같은 서비스 고유 오버라이드 규칙은 `@layer`로 감싸지 않고 레이어 없이 그대로 둔다. 서비스 스타일시트 전체를 통째로 `@layer base`로 감싸버리면 그 오버라이드들도 함께 레이어 안에 들어가 버려, kit의 `@layer components`가 명시도와 무관하게 오히려 서비스를 이기기 시작한다 — 정확히 §11.1이 경고하는 우선순위 역전이 이번엔 서비스 쪽에서 일어난다. `@layer base { ... }`는 전역 리셋·범용 UA 재정의 블록만 좁게 감싸고, 서비스가 kit을 의도적으로 오버라이드하는 규칙은 밖에 남긴다.
 2. **서비스 `:root`의 변수명이 kit `@theme`가 내보내는 이름(`--radius`, `--radius-sm` 등 Tailwind 기본 테마 이름 포함)과 겹치는지 확인한다.** 겹치면 서비스 쪽 정의가 나중에 로드되어 kit이 의도한 값을 가린다. agent-gate의 `--radius`·`--radius-sm` 재정의가 실례다 — 안전한 값이 필요하면 서비스가 재정의하지 않은 이름(예: kit의 `--radius-xs`)을 쓴다. **최종 리뷰 I1 — kit 컴포넌트 클래스(`.btn`/`.card`/`.input`,`.select`,`.textarea`/`.alert`)는 이 문제에서 이미 벗어났다**(§8.3 참조) — 내부적으로 공개 `--radius`가 아니라 소비자가 재정의할 이유가 없는 프라이빗 `--kit-radius`를 쓰기 때문이다. 이 항목이 여전히 유효한 이유는 Tailwind가 직접 생성하는 유틸리티 클래스(`rounded`, `rounded-lg` 등)가 계속 공개 `--radius`/`--radius-*`를 참조하도록 의도돼 있어서다 — 그 유틸리티들에는 이 확인이 그대로 필요하다.
 3. `:root` 토큰만 kit 매핑으로 교체한다. 기존 서비스가 `var(--bg)` 같은 짧은 이름을 쓰고 있었다면 그대로 두고 kit `--color-*`로 리다이렉트만 한다. **"HTML·JS 무변경"은 마크업·스크립트를 건드리지 않는다는 뜻일 뿐, 화면이 이전과 똑같아 보인다는 뜻이 아니다** — 렌더링에 실제로 영향을 주는 사건은 이미 0단계에서 일어났다(Preflight). 이 단계 자체(색상 변수 리다이렉트)는 안전하지만, 그 안전함을 "`<link>` 하나 걸었을 뿐인데 왜 헤딩 크기가 바뀌었지?"라는 관찰과 혼동해 원인을 색 토큰 쪽에서 찾는 일이 없어야 한다.
 4. 브라우저 강제 새로고침으로 표면 계단·텍스트 가독성·의미색 구분·레이아웃을 확인한다. 여기서 "스타일이 안 먹는다"가 나오면 원인을 safelist 구멍과 레이어 충돌 둘 다 의심한다 — 둘의 겉보기 증상이 동일하다.
@@ -485,7 +523,7 @@ Preflight는 제거하지 않는다 — kit이 Tailwind v4를 베이스로 쓰�
 
 ### 11.5 `@layer` 순서가 로드 순서에 암묵적으로 의존했다 (최종 리뷰 I4)
 
-`bundle/src/app.css`는 `@import "tailwindcss"`가 내부적으로 만드는 `@layer properties, theme, base, components, utilities` 블록들의 **첫 등장 순서**에만 의존했고, 그 순서를 명시적으로 선언하는 문이 없었다. kit 번들 혼자 로드될 때는 문제가 없지만(파일 안에서 순서가 이미 고정돼 있으므로), Vite/React 소비자(`COLLARS`, `stock/web`)처럼 자기만의 named layer를 쓰는 CSS를 kit보다 먼저 로드하는 페이지에서는, 전체 문서에서 레이어 이름이 처음 언급된 순서가 최종 우선순위를 정한다 — kit이 나중에 로드되면 kit 5개 레이어끼리의 상대 순서가 다른 문서의 개입으로 흔들릴 수 있었다.
+`bundle/src/app.css`는 `@import "tailwindcss"`가 내부적으로 만드는 `@layer properties, theme, base, components, utilities` 블록들의 **첫 등장 순서**에만 의존했고, 그 순서를 명시적으로 선언하는 문이 없었다. kit 번들 혼자 로드될 때는 문제가 없지만(파일 안에서 순서가 이미 고정돼 있으므로), Vite 소비자(`stock/web`)처럼 자기만의 named layer를 쓰는 CSS를 kit보다 먼저 로드하는 페이지에서는, 전체 문서에서 레이어 이름이 처음 언급된 순서가 최종 우선순위를 정한다 — kit이 나중에 로드되면 kit 5개 레이어끼리의 상대 순서가 다른 문서의 개입으로 흔들릴 수 있었다.
 
 CSS Cascading and Layers 명세는 "`@import` 규칙은 `@charset`과 **블록 없는(empty) `@layer` 순서 선언**을 제외한 모든 규칙보다 앞서야 한다"고 정의해, 이 순서 선언 패턴을 위한 예외를 명시적으로 두고 있다. `bundle/src/app.css` 맨 위에 다음 한 줄을 추가했다:
 
