@@ -276,7 +276,7 @@ kit.code0987.me/v2/app.css      파괴적 변경 시 신설. v1은 유지
 Cache-Control: public, max-age=300, stale-while-revalidate=86400, stale-if-error=604800
 ```
 
-5분이면 전파된다. `stale-if-error`가 있어 origin이 죽어도 Cloudflare가 일주일치 사본을 계속 내준다. 급하면 Cloudflare purge로 즉시 반영한다.
+신선도는 5분이지만 **전파가 5분이라는 뜻은 아니다** — `stale-while-revalidate=86400` 때문에 실제 최대 지연은 24시간이다(§11.6). `stale-if-error`가 있어 origin이 죽어도 Cloudflare가 일주일치 사본을 계속 내준다. 급하면 Cloudflare purge로 즉시 반영한다.
 
 **Cloudflare 캐시 룰이 필수다.** Caddy가 위 `Cache-Control` 헤더를 정확히 보내도, Cloudflare 존에 캐시 룰이 없으면 Cloudflare가 존 전역 기본값(Browser Cache TTL)으로 그 값을 조용히 재작성한다 — 실제로 `max-age=300`이 `max-age=14400`(4시간)으로 바뀌는 것을 확인했다(Task 4, `docs/2026-08-28-pilot-report.md` §4.4). 응답은 200이고 헤더 이름도 그대로라 `curl`로 헤더 존재만 확인하면 놓친다. `kit.code0987.me` 호스트명 한정으로 `http_request_cache_settings` 페이즈에 캐시 룰을 만들어 `browser_ttl`/`edge_ttl`을 `respect_origin`으로 설정해야 origin이 보낸 값이 그대로 나간다 — 존 전역이 아니라 이 호스트명에만 적용되고 룰 삭제로 즉시 되돌릴 수 있다.
 
@@ -389,6 +389,20 @@ CSS Cascading and Layers 명세는 "`@import` 규칙은 `@charset`과 **블록 �
 ```
 
 `pnpm build`로 빌드한 `bundle/dist/app.css`에서 이 문이 파일 맨 앞(폰트 `@import`보다도 앞)에 그대로 살아남는 것을 확인했다 — Tailwind 빌드가 재배치하거나 지우지 않는다(`tests/bundle.test.mjs`의 "I4" 테스트가 이를 자동 검사한다). 이제 kit의 5개 레이어는 로드 순서와 무관하게 항상 이 상대 순서를 유지한다.
+
+### 11.6 배포한 번들이 최대 24시간 동안 도착하지 않는다 (재리뷰 발견)
+
+`stale-while-revalidate=86400`은 **신선도가 지난 사본을 최대 24시간 동안 그대로 내주면서 갱신은 백그라운드로 미루라**는 지시다. Cloudflare 엣지와 브라우저 HTTP 캐시가 각각 독립적으로 이 지시를 따르므로, 배포 후 실제로 관찰되는 동작은 이렇다.
+
+1. **엣지**: 수정 웨이브 배포 약 11시간 뒤에도 엣지는 이전 번들을 내주고 있었다(`Age: 39064`, `cf-cache-status: UPDATING`). `max-age=300`을 한참 넘겼지만 그 사이 아무도 요청하지 않아 재검증이 트리거되지 않았기 때문이다. 첫 요청이 stale 사본을 받고 revalidate를 시작했고, 그다음 요청부터 새 번들이 나왔다. **배포 후 첫 방문자는 항상 옛 번들을 받는다.**
+2. **브라우저**: 같은 규칙이 방문자 로컬 캐시에도 적용된다. 재리뷰 중 실제로, 엣지가 이미 새 번들을 내주는 상태에서 브라우저는 여전히 수정 웨이브 이전 번들을 들고 있었다 — `var(--kit-radius)`가 해석되지 않아(`0px`) 드러났다. 강제 새로고침(Ctrl+Shift+R) 후에야 새 번들이 적용됐다.
+
+**마이그레이션에서 이것이 왜 위험한가.** 서비스 HTML은 컨테이너 재빌드로 즉시 바뀌지만 kit 번들은 그렇지 않다. 마이그레이션이 kit에 새 클래스를 추가하면서 동시에 서비스 HTML에서 그 클래스를 쓰기 시작하면, **재방문자는 새 HTML + 옛 번들 조합을 받아 그 클래스만 조용히 무효**가 된다 — §11.1의 주 리스크가 캐시를 통해 재현되는 경로다. 새 클래스에 의존하는 마이그레이션은 다음 중 하나를 지켜야 한다.
+
+- kit 번들을 **먼저** 배포하고 Cloudflare purge로 즉시 반영한 뒤, 확인하고 나서 서비스 HTML을 배포한다(권장 — 순서만 지키면 비용이 없다).
+- 또는 서비스 HTML을 배포하기 전에 새 클래스가 라이브 번들에 실재하는지 캐시 우회로 확인한다: `curl "https://kit.code0987.me/v1/app.css?cb=$(date +%s)"`.
+
+**검증할 때 `curl`과 브라우저가 서로 다른 답을 준다는 점을 기억한다.** `curl`은 브라우저 캐시를 공유하지 않으므로 "라이브 == dist"를 확인해도 브라우저에서 같다는 보장이 없다. 브라우저에서 검증할 때는 반드시 강제 새로고침한 뒤 측정한다.
 
 ## 12. 후속 작업
 

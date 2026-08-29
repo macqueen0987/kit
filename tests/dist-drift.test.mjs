@@ -7,6 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,12 +44,17 @@ test('dist/app.css가 src의 최신 빌드 결과와 바이트 동일하다 (I3)
     });
     const fresh = readFileSync(tmpOut, 'utf8');
     const committed = readFileSync(distPath, 'utf8');
+    // 두 문자열을 그대로 assert.equal에 넘기면 실패 시 64KB짜리 CSS 두 벌이
+    // actual/expected로 통째로 덤프돼(100KB+) 정작 읽어야 할 안내 문구가 묻힌다.
+    // 비교는 해시로 하고, 사람이 볼 정보는 메시지에 요약해서 담는다.
+    const digest = (s) => createHash('sha256').update(s).digest('hex').slice(0, 12);
     assert.equal(
-      fresh,
-      committed,
+      digest(fresh),
+      digest(committed),
       'bundle/dist/app.css가 bundle/src를 방금 다시 빌드한 결과와 다르다 — ' +
       'safelist.css/components.css/tokens.css를 고친 뒤 pnpm build를 실행하지 않고 커밋했다. ' +
-      'pnpm build로 dist/app.css를 갱신하고 다시 커밋할 것.'
+      `pnpm build로 dist/app.css를 갱신하고 다시 커밋할 것. ` +
+      `(커밋된 dist ${committed.length}바이트 / 재빌드 ${fresh.length}바이트)`
     );
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
