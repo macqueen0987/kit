@@ -1,0 +1,22 @@
+{
+  "$comment": [
+    "jinja/kit.html 의 vendored 사본이 놓이는 자리. 경로는 kit 저장소 루트 기준 상대경로다.",
+    "scripts/sync-jinja.mjs 가 여기 적힌 곳으로 복사하고,",
+    "tests/jinja-drift.test.mjs 가 사본이 원본과 바이트 동일한지 검사한다.",
+    "아직 마이그레이션하지 않은 서비스는 파일이 없어도 된다 — 테스트가 건너뛴다.",
+    "서비스를 마이그레이션할 때 이 목록에 추가한다. 순서는 스펙 §9 마이그레이션 순서를 따른다."
+  ],
+  "consumers": [
+    { "service": "itad", "path": "../itad/src/dashboard/templates/_kit.html" }
+  ],
+  "pending": [
+    { "service": "profile", "note": "스펙 §9-5" },
+    { "service": "gallery", "note": "스펙 §9-6" },
+    { "service": "logflare", "note": "스펙 §9-6" },
+    { "service": "iot", "note": "스펙 §9-6" },
+    { "service": "mpw", "note": "스펙 §9-6" },
+    { "service": "aitg", "note": "스펙 §9-6" },
+    { "service": "chzzk-auth", "note": "스펙 §9-6" },
+    { "service": "novel", "note": "스펙 §9-6" }
+  ]
+}
