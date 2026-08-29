@@ -208,7 +208,6 @@ L을 0.780으로 고정하고 hue만 돌린다. 그래서 어느 서비스를 �
 | `gallery` | 75 | 0.090 | gold (원래 330 magenta — §5.3) |
 | `novel` | 20 | 0.140 | rose |
 | `itad` | 55 | 0.150 | orange |
-| `stock` | 95 | 0.125 | amber |
 | `iot` | 130 | 0.150 | lime |
 | `chzzk-auth` | 160 | 0.150 | spring |
 
@@ -218,7 +217,22 @@ L을 0.780으로 고정하고 hue만 돌린다. 그래서 어느 서비스를 �
 
 그래서 정체성을 유지하되 kit 규율(L 0.780 고정, chroma 0.09~0.13) 안으로 들여왔다 — `oklch(0.780 0.090 75)`. chroma는 허용 범위의 하한을 쓴다.
 
-hue 75는 `itad`(55)와 `stock`(95)에서 **각각 정확히 20도** 떨어져 "서로 20도 이상"이라는 규칙을 그대로 통과한다(`tests/tokens.test.mjs`가 검사한다). `stock`의 별칭이 gold로 겹쳐 amber로 고쳤다. 330은 비었다 — 새 서비스가 생기면 쓸 수 있다.
+hue 75는 `itad`(55)에서 정확히 20도, `iot`(130)에서 55도 떨어져 "서로 20도 이상"이라는 규칙을 그대로 통과한다(`tests/tokens.test.mjs`가 검사한다).
+
+### 5.3.1 `stock`이 표에서 빠진 이유 (2026-08-29)
+
+표는 11개에서 **10개**가 됐다. `stock`이 kit에서 accent를 받지 않기로 했기 때문이다 — 비는 hue는 95(amber), 305(purple), 330(magenta) 셋이다.
+
+배정값은 amber(95)였지만 실제 서비스는 Toss 파생 핀테크 블루 `#3182f6`(oklch 0.620 0.191 258)를 쓰는 라이브 대시보드였다. 근거가 두 겹이다.
+
+1. **이 앱에서 파랑은 의미를 짊어진다.** `--color-negative`(하락)가 accent와 똑같은 `#3182f6`이다. 한국 증시 관례로 빨강이 상승, 파랑이 하락이다.
+2. **배정된 amber를 채택하면 자기 warning과 부딪힌다.** `stock`의 `--color-warning`은 hue 73이라 accent 95와 22도밖에 안 떨어진다 — 밀집한 거래 화면에서 강조와 경고가 같은 색 계열이 된다.
+
+그런데 블루를 유지하면 kit의 hue 배정 규칙을 지킬 수 없다. 258은 `COLLARS`(265)와 **6.8도**, `logflare`(240)와 **18.2도**라 둘 다 20도 미만이다. `gallery`처럼 "정체성을 유지하되 kit 규율 안으로 들여오는" 타협이 불가능한 이웃 배치다.
+
+**해소 방법은 규칙의 적용 범위를 정확히 적는 것이었다.** 이 규칙이 존재하는 이유는 *kit이 색을 배정할 때 서비스끼리 구별되게* 하는 것이다. `stock`은 `--kit-accent`를 주입하지 않고 자기 `:root`에서 `--color-accent`를 직접 정의하므로 애초에 배정 대상이 아니다. 표에서 빼는 것이 예외를 만드는 것이 아니라 **원래의 범위를 명시하는 것**이다.
+
+이것은 §7.3의 토큰 전용 진입점과 짝을 이루는 판단이다 — `stock`은 kit에서 중립 표면과 타이포만 가져가고 accent·의미색·폰트·radius는 자기 것을 유지한다.
 
 이 변경은 **마이그레이션 대상 서비스가 kit의 배정보다 더 나은 근거를 갖고 있을 때 kit 쪽을 고친다**는 선례다. 반대로 `profile`은 자기 팔레트를 kit에 맞춰 전면 교체했다 — 그쪽은 서비스에 색을 고른 근거가 없었기 때문이다.
 
@@ -295,13 +309,14 @@ brotli 압축 후 **7.0KB**(파일럿 gap-fill 기준), 최종 리뷰의 C1 폰�
 ## 7. 소비 경로
 
 ```
-tokens/tokens.css ──┬─→ bundle/dist/app.css → <link>  → Jinja 서비스 9개
-                    └─→ react/preset.js     → import  → COLLARS, stock/web
+tokens/tokens.css ──┬─→ bundle/dist/app.css    → <link> → Jinja 서비스 8개
+                    ├─→ bundle/dist/tokens.css → <link> → stock/web (§7.3)
+                    └─→ react/preset.js        → import → COLLARS (미구현)
 ```
 
-### 7.1 빌드 없는 서비스 (Jinja 9개)
+### 7.1 빌드 없는 서비스 (Jinja 8개)
 
-`code0987-kit` pip 패키지를 설치하고 템플릿에서 매크로를 쓴다.
+`code0987-kit` pip 패키지를 설치하고 템플릿에서 매크로를 쓴다. (`mpw` 폐기로 9개에서 8개가 됐다 — §2.1.)
 
 ```jinja
 {{ kit.head(accent="oklch(0.780 0.150 55)") }}
@@ -311,13 +326,43 @@ tokens/tokens.css ──┬─→ bundle/dist/app.css → <link>  → Jinja 서�
 
 매크로: `head()` `header()` `nav()` `button()` `badge()` `alert()` `empty_state()` `pagination()`
 
-### 7.2 빌드 있는 앱 (COLLARS, stock/web)
+### 7.2 빌드 있는 앱 (COLLARS)
 
 `@code0987/kit`을 git 태그로 참조한다. preset으로 정상 Tailwind 빌드를 하므로 safelist 제약을 받지 않고 purge가 정확하다.
 
 React 컴포넌트는 `Button` `Card` `Input` `Badge` `EmptyState` `Alert` 6개로 시작한다. 미리 만들어두면 안 쓰이는 컴포넌트를 유지보수하게 된다.
 
-**이 두 앱은 즉시 전파에 묶지 않는다.** 토큰 하나 고칠 때마다 두 앱의 빌드가 깨질 위험을 떠안을 이유가 없다. 각자 원할 때 태그를 올린다.
+**이 앱은 즉시 전파에 묶지 않는다.** 토큰 하나 고칠 때마다 빌드가 깨질 위험을 떠안을 이유가 없다. 원할 때 태그를 올린다.
+
+**정정 (2026-08-29)** — 이전 판은 이 절의 제목이 "COLLARS, stock/web"이었고 둘 다 React라고 적었다. **`stock/web`은 React가 아니다** — `.tsx` 0개, Tailwind 설정 없음, 순수 TypeScript + Vite다. preset은 Tailwind 빌드를 전제하므로 그 앱에는 줄 것이 없다. 실제 경로는 §7.3이다. `react/`는 아직 미구현이고 남은 후보 소비자는 `COLLARS` 하나뿐이므로, 만들기 전에 그 앱이 실제로 kit 클래스를 쓸 것인지부터 확인해야 한다(§7.3의 판단 규칙).
+
+### 7.3 자기 컴포넌트 체계가 있는 앱 — 토큰 전용 진입점 (2026-08-29 신설)
+
+```
+kit.code0987.me/v1/tokens.css      2.2KB, :root 선택자만
+```
+
+`app.css`(70KB)와 같은 `tokens/tokens.css`·`themes.css`를 읽지만 **Preflight·컴포넌트·유틸리티가 없다.** 담긴 것은 `@layer theme` 안의 `:root` 계열 선택자뿐이고, 요소 규칙이 0개라는 것을 `tests/tokens-entry.test.mjs`가 고정한다. 라이트 테마(`data-theme` 네 상태)는 그대로 들어 있다.
+
+**어느 쪽을 쓸지 정하는 규칙**: 소비자 마크업에서 kit 클래스를 **정확 일치로** 세어 0이면 `tokens.css`, 하나라도 있으면 `app.css`.
+
+`stock/web`이 첫 소비자이자 이 진입점이 생긴 이유다.
+
+| 재는 것 | 값 |
+|---|---|
+| kit 클래스 정확 일치 | **0건** (자체 `ui-btn`/`ui-card`/`ui-input`/`ui-badge`) |
+| CSS 규모 | 5,192줄 / 14파일 |
+| `<p>` 사용 / `p` 선택자 | 129곳 / **2개** |
+| `h2`·`h3`·`h4` 사용 / 선택자 | 25곳 / 4개 |
+| `ul`·`li` 사용 / 선택자 | 28곳 / 2개 |
+
+즉 `app.css`를 물리면 **얻는 것은 토큰뿐인데 비용은 Preflight**이고, 브라우저 기본값에 기대는 자리가 많아 §11.1이 말하는 조용한 실패가 렌더해 보지 않은 라우트에서 터진다. 실제로 `<link>`를 브라우저에서 주입해 계산된 스타일을 전후 대조했을 때 회귀 1건(`p.calendar-shell__status`의 아래 마진 소실)이 확인됐고, 그건 렌더된 한 화면에서만 나온 수치다.
+
+**토큰 전용을 쓸 때 걸린 함정 두 가지** (둘 다 `stock/web`에서 실제로 겪었다).
+
+1. **kit 값을 받으려면 그 이름을 서비스에서 지워야 한다.** kit 토큰은 `@layer theme` 안이고 서비스의 `:root`는 레이어 밖이라, 같은 이름을 서비스가 적어두면 로드 순서와 무관하게 서비스가 이긴다. `stock`은 `--color-bg`/`surface`/`border`/`border-strong`/`text`를 **삭제**해서 kit이 채우게 했다.
+
+2. **canvas 계열 라이브러리에 토큰 값을 그대로 넘기면 안 된다.** 토큰은 `oklch(72% .012 285)` 형태인데 `lightweight-charts`는 브라우저가 아니라 자체 색 파서를 쓰고 거기엔 oklch가 없다 — `Failed to parse color: oklch(...)`로 차트가 통째로 죽었다. **canvas의 `fillStyle`은 oklch를 받아들이므로 그것으로 확인하면 이 실패가 보이지 않는다**(실제로 그렇게 확인했다가 놓쳤다). 1x1 캔버스에 칠하고 `getImageData`로 픽셀을 읽어 `#rrggbb`로 바꿔 넘긴다 — 브라우저를 파서가 아니라 **변환기**로 쓰는 것이다. 구현은 `services/stock/web/src/lib/chartTheme.ts`.
 
 ## 8. 배포와 버저닝
 

@@ -2,7 +2,14 @@
  * 스펙: docs/2026-08-28-kit-design.md §5
  * 값을 바꾸는 것은 파괴적 변경이 아니다. 이름을 바꾸거나 지우는 것만 major다. */
 
-@theme {
+/* `static` 이 필요한 이유 — Tailwind v4 는 @theme 변수를 **참조되지 않으면 털어낸다.**
+ * 전체 번들(app.css)에서는 safelist 가 만든 유틸리티들이 대부분을 참조해 살아남지만,
+ * 토큰 전용 진입점(bundle/src/tokens-entry.css)에는 유틸리티가 하나도 없어서
+ * 참조가 0이 되고 다크 기본 팔레트가 통째로 사라진다 — 실제로 그렇게 빌드돼
+ * :root 에 --kit-accent 하나만 남는 것을 확인했다(라이트 팔레트만 살아남았는데,
+ * 그건 themes.css 의 평범한 CSS 라 트리셰이킹 대상이 아니었기 때문이다).
+ * `static` 은 참조 여부와 무관하게 전부 내보내라는 뜻이다. */
+@theme static {
   /* 표면 — L값만 올린 계단. 중립색은 hue 285로 살짝 치우쳐 있다 */
   --color-bg:            oklch(0.145 0.005 285);
   --color-surface:       oklch(0.185 0.006 285);

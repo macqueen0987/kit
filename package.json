@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tailwindcss -i bundle/src/app.css -o bundle/dist/app.css --minify",
+    "build": "tailwindcss -i bundle/src/app.css -o bundle/dist/app.css --minify && tailwindcss -i bundle/src/tokens-entry.css -o bundle/dist/tokens.css --minify",
     "test": "node --test \"tests/*.test.mjs\""
   },
   "devDependencies": {

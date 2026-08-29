@@ -60,6 +60,30 @@ sessionStorage.setItem('base', JSON.stringify(snap()));
 
 `<img>`가 있다면 **부모가 flex/grid인지 확인한다** — flex 자식이면 `display:block`이 되어도 가로로 흐르므로 안전하다(`profile`·`gallery`가 그 경우다). 일반 블록 컨테이너 안의 인라인 이미지만 깨진다.
 
+### 1.2 Preflight 를 원하지 않으면 — 토큰 전용 진입점
+
+배포물은 두 개다. 어느 쪽을 쓸지는 **소비자가 kit 클래스를 실제로 쓰는가**로 갈린다.
+
+| URL | 크기 | 담긴 것 | 쓸 곳 |
+|---|---|---|---|
+| `kit.code0987.me/v1/app.css` | 70KB | 토큰 + Preflight + 컴포넌트 + 유틸리티 | kit 클래스(`.btn`/`.card`/…)를 쓰는 서비스 |
+| `kit.code0987.me/v1/tokens.css` | 2.2KB | **토큰만** (`:root` 선택자뿐) | 자기 컴포넌트 체계가 이미 있고 팔레트만 맞추려는 앱 |
+
+`tokens.css` 는 요소 규칙을 하나도 갖지 않는다 — `@layer theme` 안의 `:root` 계열 선택자가 전부다(`tests/tokens-entry.test.mjs` 가 이 계약을 고정한다). 따라서 §1 의 표에 나오는 낙차가 **구조적으로 일어날 수 없다.** 라이트 테마(`data-theme`)는 그대로 들어 있다.
+
+**언제 이쪽을 고르나.** 첫 소비자였던 `stock/web` 의 판단 근거가 그대로 기준이 된다.
+
+- 그 앱은 kit 클래스를 **정확 일치 0건**으로 쓰지 않는다. `ui-btn`/`ui-card`/`ui-input`/`ui-badge` 라는 자체 프리미티브가 이미 있다.
+- 그런데 `<p>` 를 129곳에서 쓰면서 `p` 선택자는 CSS 전체에 2개뿐이다(`h2`·`h3`·`h4` 25곳에 선택자 4개, `ul`·`li` 28곳에 선택자 2개). 즉 브라우저 기본값에 기대는 자리가 많고, 그게 정확히 §1.1 이 말하는 회귀 지점이다.
+- 그러므로 `app.css` 를 물리면 **얻는 것은 토큰뿐인데 비용은 Preflight** 다. 실측으로 확인한 회귀도 있었다(`p.calendar-shell__status` 의 아래 마진이 사라졌다).
+
+**판단 규칙**: 소비자 마크업에서 kit 클래스를 정확 일치로 세어 보고 **0이면 `tokens.css`**, 하나라도 있으면 `app.css` 를 쓴다. 세는 방법은 `scripts/check-classes.mjs` 가 이미 갖고 있다.
+
+**토큰 전용을 쓸 때 주의할 것 두 가지.**
+
+1. **kit 값을 받으려면 그 이름을 서비스에서 지워야 한다.** kit 토큰은 `@layer theme` 안에 있고 서비스의 `:root` 는 보통 레이어 밖이라, 같은 이름을 서비스가 적어두면 **로드 순서와 무관하게 서비스가 이긴다.** "kit 을 물렸는데 색이 안 바뀐다"의 원인은 거의 항상 이것이다.
+2. **canvas 계열 라이브러리에 토큰 값을 그대로 넘기지 말 것.** 토큰은 `oklch(72% .012 285)` 형태인데, 차트 라이브러리들은 브라우저가 아니라 자기 색 파서를 쓰고 거기엔 oklch 가 없는 경우가 많다. `stock/web` 에서 실제로 `lightweight-charts` 가 `Failed to parse color: oklch(...)` 로 죽어 차트가 통째로 안 그려졌다. **canvas 의 `fillStyle` 로 확인하면 이 실패가 보이지 않는다** — 그건 브라우저 파서지 라이브러리 파서가 아니다. 1x1 캔버스에 칠하고 `getImageData` 로 픽셀을 읽어 `#rrggbb` 로 바꿔 넘긴다(`services/stock/web/src/lib/chartTheme.ts` 에 구현이 있다).
+
 ## 2. 토큰 (`--color-*`, CSS 변수 겸 유틸리티 접두사)
 
 | 이름 | 값(oklch) | 용도 |
@@ -234,3 +258,5 @@ sessionStorage.setItem('base', JSON.stringify(snap()));
 ## 7. 서비스별 accent
 
 `<style>:root{--kit-accent:oklch(0.780 0.130 <hue>)}</style>` 한 줄로 주입한다(Jinja 서비스는 `kit.head(accent=...)` 매크로가 처리한다). **`--color-accent`가 아니라 `--kit-accent`다** — 이유는 §6.1. L=0.780 고정, hue만 서비스마다 다르다 — 값은 `docs/2026-08-28-kit-design.md` §5.2 표를 따른다. `on-accent`(텍스트)는 재정의하지 않는다 — 모든 서비스 accent 위에서 AA 통과가 이미 테스트로 보장돼 있다. accent 위에 텍스트를 올릴 때는 §2의 규칙대로 `text-on-accent`만 쓴다.
+
+**모든 소비자가 kit 에서 accent 를 받는 것은 아니다.** `stock/web` 은 자기 accent(Toss 파생 블루 `#3182f6`)를 유지하고 kit 에서는 중립 표면과 타이포만 가져간다 — 그 앱에서 파랑은 장식이 아니라 의미이기 때문이다(`--color-negative`=하락이 accent 와 같은 색이고, 한국 증시 관례로 빨강이 상승·파랑이 하락이다). 그래서 `SERVICE_ACCENTS` 표에서 빠져 있고 hue 20도 규칙의 대상도 아니다. **이 규칙은 kit 이 색을 배정하는 서비스에만 적용된다.** 자기 accent 를 유지하는 소비자는 `--kit-accent` 를 주입하지 않고, 자기 `:root` 에서 `--color-accent` 를 직접 정의한다(다크 전용 앱이라 §6.1 의 라이트 대비 문제가 없다).

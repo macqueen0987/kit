@@ -1,0 +1,31 @@
+/* kit 토큰 전용 진입점 — `kit.code0987.me/v1/tokens.css`
+ *
+ * 누구를 위한 것인가: **자기 컴포넌트 체계를 이미 갖췄지만 팔레트는 kit 을
+ * 따르고 싶은 소비자.** 첫 사례가 `stock/web` 이다. 그 앱은 kit 클래스를
+ * 하나도 쓰지 않고(정확 일치 0건) `ui-btn`/`ui-card`/`ui-input` 이라는 자체
+ * 프리미티브를 갖고 있어서, `app.css` 를 통째로 물리면 얻는 것은 토큰뿐인데
+ * Tailwind Preflight 가 딸려 들어온다. 그 앱은 `<p>` 를 129곳에서 쓰면서
+ * `p` 선택자는 2개뿐이라, Preflight 의 마진 초기화가 렌더해 보지 않은
+ * 라우트에서 조용히 터진다 — 이 저장소가 막으려는 바로 그 실패다.
+ *
+ * 그래서 이 진입점은 **@layer theme 만** 내보낸다. Preflight 도, 컴포넌트도,
+ * 유틸리티도 없다. 소비자는 토큰 이름만 얻고 렌더링 규칙은 하나도 받지 않는다.
+ *
+ * app.css 와 같은 tokens.css/themes.css 를 읽으므로 값이 갈라지지 않는다
+ * (tests/tokens-entry.test.mjs 가 두 산출물의 토큰이 일치하는지 검사한다).
+ *
+ * 폰트 @import 를 여기에도 두는 이유는 app.css 와 같다(C1). --font-sans 가
+ * 가리키는 글꼴이 로드돼 있지 않으면 브라우저가 조용히 system-ui 로 대체해
+ * "토큰은 있는데 글꼴만 다른" 진단하기 어려운 상태가 된다. 자기 글꼴을 쓰는
+ * 소비자가 --font-sans 를 덮어쓰면 그 woff2 는 애초에 내려받지 않는다 —
+ * 브라우저는 실제로 렌더에 쓰이는 패밀리의 파일만 가져온다. */
+
+@layer properties, theme;
+
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap");
+
+@import "tailwindcss/theme.css" layer(theme) source(none);
+@import "../../tokens/tokens.css";
+/* themes.css 는 tokens.css 뒤 — 같은 @layer theme 안에서 소스 순서상 나중이라야
+ * 라이트 팔레트가 기본(다크)을 덮는다. app.css 와 같은 이유다. */
+@import "./themes.css";
