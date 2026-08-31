@@ -77,4 +77,31 @@
   textarea {
     resize: none;
   }
+
+  /* 전역 스크롤바 — 얇고 거의 안 보이며 레일(track)은 투명.
+   *
+   * 표준 속성(Firefox 등)과 WebKit 가상요소를 함께 둔다. track/corner 는
+   * 반드시 transparent. thumb 는 --color-border, hover/active 는
+   * --color-border-strong. :where(*) 로 명시도 0 — 서비스가 쉽게 덮는다.
+   * tokens.css 진입점에는 넣지 않는다(요소 규칙 0 계약). */
+  :where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  :where(*)::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  :where(*)::-webkit-scrollbar-track,
+  :where(*)::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  :where(*)::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-xs);
+  }
+  :where(*)::-webkit-scrollbar-thumb:hover,
+  :where(*)::-webkit-scrollbar-thumb:active {
+    background: var(--color-border-strong);
+  }
 }

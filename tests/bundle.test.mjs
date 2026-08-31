@@ -144,6 +144,59 @@ test('체크박스·라디오가 클래스 없이도 서비스 accent 를 쓴다
   assert.ok(iAccent < iComponents, 'accent-color 가 base 레이어 밖으로 나갔다');
 });
 
+test('전역 스크롤바가 base 레이어에 있고 레일이 투명하다', () => {
+  assert.match(
+    css,
+    /:where\(\*\)\{[^}]*scrollbar-width:thin/,
+    'scrollbar-width:thin 이 :where(*) base 규칙에 없다',
+  );
+  assert.match(
+    css,
+    /scrollbar-color:var\(--color-border\)\s*transparent/,
+    'scrollbar-color 가 border thumb + transparent track 가 아니다',
+  );
+
+  assert.match(css, /:where\(\*\)::-webkit-scrollbar\{/, '::-webkit-scrollbar 규칙이 없다');
+  assert.match(
+    css,
+    /:where\(\*\)::-webkit-scrollbar-track(?:,\:where\(\*\)::-webkit-scrollbar-corner)?\{[^}]*(?:transparent|0 0)/,
+    'track 이 transparent 가 아니다',
+  );
+  assert.match(
+    css,
+    /(?:,\:where\(\*\)::-webkit-scrollbar-corner|:where\(\*\)::-webkit-scrollbar-corner)\{[^}]*(?:transparent|0 0)/,
+    'corner 가 transparent 가 아니다',
+  );
+  assert.match(
+    css,
+    /:where\(\*\)::-webkit-scrollbar-thumb\{[^}]*var\(--color-border\)/,
+    'thumb 이 --color-border 를 안 쓴다',
+  );
+  assert.match(
+    css,
+    /::-webkit-scrollbar-thumb:hover(?:,\:where\(\*\)::-webkit-scrollbar-thumb:active)?\{[^}]*var\(--color-border-strong\)/,
+    'thumb:hover 가 border-strong 이 아니다',
+  );
+  assert.match(
+    css,
+    /::-webkit-scrollbar-thumb:active(?:,\:where\(\*\)::-webkit-scrollbar-thumb:hover)?\{[^}]*var\(--color-border-strong\)/,
+    'thumb:active 가 border-strong 이 아니다',
+  );
+
+  const iPreflight = css.indexOf('h1,h2,h3,h4,h5,h6');
+  const iScroll = css.indexOf('scrollbar-width:thin');
+  const iComponents = css.indexOf('@layer components');
+  assert.ok(iPreflight > 0 && iScroll > iPreflight, 'scrollbar 가 Preflight 보다 앞에 있다');
+  assert.ok(iScroll < iComponents, 'scrollbar 가 base 레이어 밖으로 나갔다');
+});
+
+test('tokens.css 에는 스크롤바 규칙이 없다', () => {
+  const tokensPath = new URL('../bundle/dist/tokens.css', import.meta.url);
+  const tokens = readFileSync(tokensPath, 'utf8');
+  assert.ok(!tokens.includes('scrollbar'), 'tokens.css 에 scrollbar 문자열이 있다');
+  assert.ok(!tokens.includes('::-webkit-scrollbar'), 'tokens.css 에 webkit scrollbar 가 있다');
+});
+
 test('.select 가 자체 드롭다운 표시자를 그린다', () => {
   // appearance:none 만 있고 화살표가 없으면 표시자가 아예 사라진다 — 둘은
   // 반드시 함께 있어야 한다. 소비 서비스가 background 단축 속성으로 이
