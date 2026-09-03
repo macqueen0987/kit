@@ -129,10 +129,10 @@ services/kit/
 
 ### 4.1 서브도메인과 컨테이너
 
-`kit.code0987.me`로 서빙하되 **전용 컨테이너를 만들지 않는다.** `bundle/dist`를 edge Caddy에 볼륨 마운트하고 `file_server`로 직접 내보낸다.
+**전용 컨테이너를 만들지 않는다.** `bundle/dist`를 edge Caddy에 볼륨 마운트하고 `file_server`로 직접 내보내는 경로는 그대로다. 기본 CDN은 GitHub Pages(`https://macqueen0987.github.io/kit/v1/…`)다. edge 마운트는 optional origin이다.
 
 - 컨테이너가 늘지 않는다.
-- 새 장애점이 생기지 않는다. edge가 죽으면 어차피 소비 서비스도 같이 죽으므로 위험 증가분이 0이다.
+- 소비자는 `KIT_BASE_URL`로 origin을 고른다. 기본값은 Pages라 MacServer가 내려도 기본값 소비자는 스타일이 남는다.
 
 이로 인해 edge 설계의 "디렉터리명 = 컨테이너명 = 서브도메인" 규칙에서 **컨테이너 항목만 비는 예외**가 된다. `services/kit`은 실행 중인 서비스가 아니라 edge가 서빙하는 산출물의 소스다. edge 설계 문서에 예외로 명시한다.
 

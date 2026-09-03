@@ -36,13 +36,15 @@
   덮으면 다크에서는 동작하지만 라이트 테마에서 그 값이 그대로 쓰여 밝은 바탕
   위 밝은 글자가 된다. 자세한 근거는 kit 의 bundle/src/themes.css 머리말 참고.
 
-  이 매크로가 CDN URL 을 유일하게 아는 곳이다. v2 로 옮기거나 도메인이 바뀌면
-  이 파일만 고치고 sync 를 돌린다.
+  이 매크로가 `/v1/app.css` 경로와 글로벌 `kit_base_url` 을 유일하게 아는 곳이다.
+  기본 origin 은 GitHub Pages (`https://macqueen0987.github.io/kit`) 이다.
+  MacServer origin 은 `KIT_BASE_URL=https://kit.code0987.me` 로 덮는다.
+  v2 로 옮기거나 도메인이 바뀌면 이 파일만 고치고 sync 를 돌린다.
 -#}
 {%- macro head(accent=none) -%}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://kit.code0987.me/v1/app.css">
+<link rel="stylesheet" href="{{ kit_base_url | default('https://macqueen0987.github.io/kit') }}/v1/app.css">
 {%- if accent %}
 <style>:root{--kit-accent:{{ accent }}}</style>
 {%- endif %}
