@@ -1,6 +1,6 @@
 # kit — AGENTS.md
 
-이 파일은 `kit.code0987.me/v1/app.css`를 쓰는 모든 서비스의 UI를 짤 때 읽는 계약이다. 사람이 아니라 AI가 읽는다 — 산문 설명 대신 표와 목록으로 구성한다. 원본: `bundle/src/safelist.css`(허용 클래스 전체), `tokens/tokens.css`(토큰), `docs/2026-08-28-kit-design.md`(스펙), `docs/2026-08-28-pilot-report.md`(파일럿에서 드러난 함정).
+이 파일은 `${KIT_BASE_URL}/v1/app.css`를 쓰는 모든 서비스의 UI를 짤 때 읽는 계약이다. 기본 origin은 GitHub Pages `https://macqueen0987.github.io/kit`이다. 사람이 아니라 AI가 읽는다 — 산문 설명 대신 표와 목록으로 구성한다. 원본: `bundle/src/safelist.css`(허용 클래스 전체), `tokens/tokens.css`(토큰), `docs/2026-08-28-kit-design.md`(스펙), `docs/2026-08-28-pilot-report.md`(파일럿에서 드러난 함정).
 
 ## 0. 가장 먼저 알아야 할 것 — 조용한 실패
 
@@ -66,8 +66,10 @@ sessionStorage.setItem('base', JSON.stringify(snap()));
 
 | URL | 크기 | 담긴 것 | 쓸 곳 |
 |---|---|---|---|
-| `kit.code0987.me/v1/app.css` | 70KB | 토큰 + Preflight + 컴포넌트 + 유틸리티 | kit 클래스(`.btn`/`.card`/…)를 쓰는 서비스 |
-| `kit.code0987.me/v1/tokens.css` | 2.2KB | **토큰만** (`:root` 선택자뿐) | 자기 컴포넌트 체계가 이미 있고 팔레트만 맞추려는 앱 |
+| `https://macqueen0987.github.io/kit/v1/app.css` | 70KB | 토큰 + Preflight + 컴포넌트 + 유틸리티 | kit 클래스(`.btn`/`.card`/…)를 쓰는 서비스 |
+| `https://macqueen0987.github.io/kit/v1/tokens.css` | 2.2KB | **토큰만** (`:root` 선택자뿐) | 자기 컴포넌트 체계가 이미 있고 팔레트만 맞추려는 앱 |
+
+MacServer는 `KIT_BASE_URL=https://kit.code0987.me`로 edge origin을 고를 수 있다.
 
 `tokens.css` 는 요소 규칙을 하나도 갖지 않는다 — `@layer theme` 안의 `:root` 계열 선택자가 전부다(`tests/tokens-entry.test.mjs` 가 이 계약을 고정한다). 따라서 §1 의 표에 나오는 낙차가 **구조적으로 일어날 수 없다.** 라이트 테마(`data-theme`)는 그대로 들어 있다.
 

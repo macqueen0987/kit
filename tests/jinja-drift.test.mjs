@@ -50,17 +50,28 @@ test('vendored 매크로 사본이 jinja/kit.html 과 바이트 동일하다', (
     stale.join('\n'),
   );
 
-  // 소비자가 하나도 검사되지 않았다면 이 테스트는 아무것도 지키지 못한 것이다.
-  // itad 마이그레이션 이후로는 최소 1개가 있어야 한다.
+  // kit 단독 클론 (GitHub Actions)에는 소비자 사본이 없다. 그 경우 바이트
+  // 비교는 스킵하고, 아래 매크로 계약 테스트가 URL 규칙을 지킨다.
+  const workspaceConsumer = existsSync(resolve(rootDir, '../itad'));
+  if (!workspaceConsumer) return;
   assert.ok(checked >= 1, 'vendored 사본을 하나도 찾지 못했다 — consumers.json 경로를 확인할 것');
 });
 
-test('매크로가 CDN URL 과 accent 주입을 모두 담고 있다', () => {
+test('매크로가 kit_base_url 과 accent 주입을 모두 담고 있다', () => {
   const source = readFileSync(sourcePath, 'utf8');
-  // 이 매크로의 존재 이유가 "CDN URL 이 서비스 코드에 하드코딩되지 않는다"이므로
-  // URL 이 실제로 여기 있는지, accent 주입 훅이 살아 있는지 최소한으로 고정한다.
-  assert.match(source, /https:\/\/kit\.code0987\.me\/v1\/app\.css/, 'kit 번들 URL 이 없다');
-  assert.match(source, /--color-accent/, 'accent 주입이 없다');
+  assert.match(source, /kit_base_url/, 'kit_base_url 글로벌이 없다');
+  assert.match(
+    source,
+    /macqueen0987\.github\.io\/kit/,
+    'Pages 기본 origin 이 없다',
+  );
+  assert.match(source, /\/v1\/app\.css/, 'v1/app.css 경로가 없다');
+  assert.doesNotMatch(
+    source,
+    /href="https:\/\/kit\.code0987\.me\/v1\/app\.css"/,
+    'origin CDN 이 <link> 에 하드코딩돼 있다',
+  );
+  assert.match(source, /--kit-accent/, 'accent 주입이 없다');
   assert.match(source, /macro head\(/, 'head() 매크로가 없다');
   // 폰트 <link> 는 넣지 않는다 — 번들의 @import 가 처리한다(스펙 §5.1).
   assert.doesNotMatch(
