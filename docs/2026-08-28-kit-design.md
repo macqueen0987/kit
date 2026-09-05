@@ -76,6 +76,12 @@
 
 대상은 **9개**가 된다.
 
+**업데이트 (2026-09-05) — iot 재합류.** 위 진단은 더 이상 최신이 아니다. `projects/iot`는 이관이 아니라 **완전히 새로 작성**돼 `macqueen0987/IoT`(Universal IR/WiFi Remote — ESP32 MicroPython 노드 + FastAPI `ir-server` + SmartThings C2C 브리지)로 라즈베리파이 위에서 실제로 돈다. `docker-compose.prod.yml` 기준 운영 중이고 커밋도 활발하다 — 위에 적힌 "esp32heater"·"homeserver"·"4커밋" 서술은 그 이전 시도를 가리키는 것으로, 지금 코드베이스와는 무관하다.
+
+홈 대시보드(`/`)가 `kit/v1/app.css`를 로드한다. **Jinja 서비스가 아니라 정적 HTML을 직접 서빙**하므로(`FileResponse` + `StaticFiles`), `jinja/kit.html` 매크로는 쓰지 않고 `<link>`·accent `<style>`을 손으로 써 넣었다 — 내용은 매크로가 만드는 것과 동일하다. 예약해뒀던 accent hue 130(lime)을 그대로 썼다 (`--kit-accent: oklch(0.780 0.150 130)`). `jinja/consumers.json`의 `pending`에서는 뺐다(Jinja 마이그레이션 대상이 아니므로 `consumers`에도 넣지 않는다).
+
+대상은 다시 **10개**가 된다.
+
 **최종 리뷰 문서 정정 — `novel` 누락.** 이전 판은 위 표에서 `novel`을 빠뜨린 채 "소비 서비스 11개"로 적었는데, §5.2 accent 표와 `scripts/parse-tokens.mjs`의 `SERVICE_ACCENTS`(테스트로 12개가 고정돼 있다)는 이미 처음부터 `novel`을 포함한 12개였다 — 표·서술과 실제 코드가 어긋나 있었다. `novel`을 위 표와 §9 마이그레이션 순서에 추가해 12개로 맞춘다. `novel`이 §1 비목표에서 제외한 것은 안드로이드 앱뿐, 웹 서비스(`novel.code0987.me`, `novel-app-1`)는 원래부터 대상이었다.
 
 ## 3. 결정 사항

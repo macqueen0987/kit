@@ -30,10 +30,6 @@
       "note": "스펙 §9-6"
     },
     {
-      "service": "iot",
-      "note": "스펙 §9-6"
-    },
-    {
       "service": "mpw",
       "note": "스펙 §9-6"
     },
